@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE HOLLOW — Archive Terminal</title>
+<style>
+:root{--bg:#050b08;--panel:#09140f;--green:#9dffb2;--dim:#5d9a6c;--line:#285b38;--amber:#e8d28a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#102519 0%,var(--bg) 65%);color:var(--green);font:16px/1.55 "Courier New",monospace}
+main{max-width:980px;margin:auto;padding:38px 20px 60px}.top{border:1px solid var(--line);background:#07110c;padding:24px;text-align:center;box-shadow:0 0 35px #173d2440}
+.kicker{letter-spacing:.28em;color:var(--dim);font-size:.78rem}.logo{font-size:clamp(2.4rem,8vw,5.4rem);letter-spacing:.12em;margin:5px 0;text-shadow:0 0 18px #71ff8c70}.subtitle{color:#b5d9bd}
+.status{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:18px 0;color:var(--dim);font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+.chapter{border:1px solid var(--line);background:linear-gradient(145deg,#0c1a12,#07100b);padding:19px;display:flex;flex-direction:column;min-height:230px}
+.chapter h2{font-size:1.08rem;letter-spacing:.08em;margin:4px 0 8px}.num{color:var(--dim);font-size:.78rem;letter-spacing:.18em}.chapter p{color:#a5c8ad;flex:1;margin:6px 0 18px}.meta{font-size:.76rem;color:var(--dim);margin-bottom:12px}
+a.play{display:block;text-align:center;text-decoration:none;color:#041008;background:var(--green);padding:11px 14px;font-weight:bold;letter-spacing:.1em;border:1px solid var(--green)}
+a.play:hover{background:#d0ffd8;box-shadow:0 0 16px #8bffa477}
+.foot{border-top:1px solid var(--line);margin-top:28px;padding-top:18px;color:var(--dim);font-size:.8rem}
+.notice{border-left:2px solid var(--amber);padding:10px 14px;color:#d9d0a4;background:#17160d;margin-top:18px;font-size:.85rem}
+.scan{color:var(--dim);font-size:.78rem;margin-top:14px}
+@media(max-width:520px){main{padding:18px 12px 36px}.top{padding:18px 12px}}
+</style>
+</head>
+<body><main>
+<header class="top">
+<div class="kicker">INDEPENDENT ARCHIVE NETWORK // NODE 00</div>
+<div class="logo">THE HOLLOW</div>
+<div class="subtitle">A text adventure in five chapters. Five chapters recovered.</div>
+<div class="scan">[ SIGNAL LOCKED ] &nbsp; [ FIVE CHAPTERS AVAILABLE ]</div>
+</header>
+<div class="status"><span>LOCAL ARCHIVE // OFFLINE READY</span><span id="saveStatus">CHECKING LOCAL SAVES...</span></div>
+<section class="grid">
+<article class="chapter"><div class="num">CHAPTER 01</div><h2>THE PLACE BETWEEN</h2><p>Wake somewhere that should not exist. Follow the traces left behind and find the first door into the Hollow.</p><div class="meta" id="s1">SAVE: NOT CHECKED</div><a class="play" href="chapter1.html">ENTER CHAPTER ONE</a></article>
+<article class="chapter"><div class="num">CHAPTER 02</div><h2>THE CITY THAT FORGOT</h2><p>A city has edited its own past. Find Mara, question the records, and decide what should happen to the memories buried below.</p><div class="meta" id="s2">SAVE: NOT CHECKED</div><a class="play" href="chapter2.html">ENTER CHAPTER TWO</a></article>
+<article class="chapter"><div class="num">CHAPTER 03</div><h2>THE LAST SIGNAL</h2><p>A signal crosses the dead sea. Search the wreckage, follow the transmission, and choose what deserves to survive.</p><div class="meta" id="s3">SAVE: NOT CHECKED</div><a class="play" href="chapter3.html">ENTER CHAPTER THREE</a></article>
+<article class="chapter"><div class="num">CHAPTER 04</div><h2>THE WORLD BENEATH</h2><p>Descend beneath the Hollow, awaken the root engine, and decide whether the buried world should be mended, opened, or bound.</p><div class="meta" id="s4">SAVE: NOT CHECKED</div><a class="play" href="chapter4.html">ENTER CHAPTER FOUR</a></article>
+<article class="chapter"><div class="num">CHAPTER 05</div><h2>THE SILENCE AFTER</h2><p>Return to the changed world, gather its last keepsakes, and decide what the future should remember. A hidden fourth ending waits for those who listen.</p><div class="meta" id="s5">SAVE: NOT CHECKED</div><a class="play" href="chapter5.html">ENTER CHAPTER FIVE</a></article>
+</section>
+<div class="notice">Each chapter keeps its own browser save. Open the chapters from this folder and use the same browser to keep those saves available. Chapter Five is an epilogue: choose the ending you reached in Chapter Four when interpreting its aftermath; the optional fourth ending can be discovered within Chapter Five.</div>
+<footer class="foot">NO ACCOUNT REQUIRED · NO PAID SERVICES · NO EXTERNAL API · YOUR SAVES STAY IN THIS BROWSER<br>THE HOLLOW ARCHIVE TERMINAL // BUILD 1.2</footer>
+</main>
+<script>
+const checks=[
+ ["hollowChapter1","s1"],["hollowChapter2","s2"],["theHollowChapter3","s3"],["theHollowChapter4","s4"],["theHollowChapter5","s5"]
+];
+let found=0;
+for(const [key,id] of checks){
+ try{
+  const v=localStorage.getItem(key);
+  document.getElementById(id).textContent=v?"SAVE FOUND IN THIS BROWSER":"NO LOCAL SAVE FOUND";
+  if(v)found++;
+ }catch(e){document.getElementById(id).textContent="SAVE STATUS UNAVAILABLE";}
+}
+document.getElementById("saveStatus").textContent=found+" / 5 CHAPTER SAVES FOUND";
+</script></body></html>

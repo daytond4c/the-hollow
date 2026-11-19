@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE HOLLOW — Chapter Two</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root{--g:#a9ff9d;--d:#659d6c;--line:#285c34}
+*{box-sizing:border-box}body{margin:0;padding:20px 12px;background:radial-gradient(ellipse at 50% 0,#14251a,#030604 68%);color:var(--g);font-family:'Share Tech Mono',monospace}
+.app{max-width:1050px;margin:auto;border:1px solid #397d48;border-radius:10px;overflow:hidden;background:#050a07;box-shadow:0 0 55px #39ff5a18}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 17px;background:#0c180f;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:2px;color:#83bd89}
+header{padding:20px 22px 15px;border-bottom:1px solid #183b22}h1{margin:0;font-size:clamp(26px,5vw,43px);letter-spacing:7px;text-shadow:0 0 18px #63ff76}.sub{font-size:11px;letter-spacing:3px;color:#659d6c;margin-top:7px}
+main{padding:18px 22px 22px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:13px}.story{height:min(55vh,520px);min-height:330px;overflow:auto;background:#07100a;border:1px solid #1e4c2a;padding:17px;line-height:1.65;font-size:14px;white-space:pre-wrap}.story p{margin:0 0 12px}.room{color:#d1ffd0;text-shadow:0 0 8px #4aff6b44}.system{color:#7ebc86}.warn{color:#ffd17e}.danger{color:#ff9292}
+.side{display:flex;flex-direction:column;gap:10px}.box{background:#07100a;border:1px solid #1e4c2a;padding:12px}.label{font-size:10px;letter-spacing:2px;color:#659c6d;margin-bottom:8px}.value{font-size:12px;line-height:1.6;color:#c8f5c4;overflow-wrap:anywhere}.entry{display:flex;align-items:center;gap:10px;margin-top:13px;border-bottom:1px solid #397d48;padding:9px 0}.prompt{font-size:20px;color:#d5ffd0}input{background:transparent;border:0;outline:0;color:#e1ffe0;font:15px 'Share Tech Mono';width:100%;caret-color:var(--g)}
+.controls{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}button{font:11px 'Share Tech Mono';letter-spacing:1px;color:#c4ffc1;background:#0b1b10;border:1px solid #347c43;padding:9px 11px;border-radius:4px;cursor:pointer}button:hover{background:#17351e;box-shadow:0 0 12px #4aff6b33}.help{color:#659d6c;font-size:11px;line-height:1.6;margin-top:12px}
+footer{padding:11px 20px;border-top:1px solid #183b22;color:#527d59;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.story{height:48vh;min-height:290px}main{padding:13px}}@media(max-width:420px){.side{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="app">
+<div class="top"><span>HOLLOW SYSTEMS // INTERACTIVE FICTION</span><span id="session">CHAPTER 02 · NEW SESSION</span></div>
+<header><h1>THE HOLLOW</h1><div class="sub">CHAPTER TWO: THE CITY THAT FORGOT</div></header>
+<main><div class="layout"><div>
+<div class="story" id="story" aria-live="polite"></div>
+<div class="entry"><span class="prompt">&gt;</span><input id="command" autocomplete="off" spellcheck="false" placeholder="What do you do? Try HELP."></div>
+<div class="controls"><button data-cmd="LOOK">LOOK</button><button data-cmd="INVENTORY">INVENTORY</button><button data-cmd="MAP">MAP</button><button data-cmd="TALK TO MARA">TALK</button><button data-cmd="HELP">HELP</button><button id="save">SAVE</button><button id="load">LOAD</button><button id="restart">NEW GAME</button></div>
+<div class="help">COMMANDS: GO NORTH · EXAMINE [THING] · TAKE [ITEM] · USE [ITEM] ON [THING] · TALK TO [PERSON] · GIVE [ITEM] TO [PERSON] · READ [THING].</div>
+</div><aside class="side">
+<div class="box"><div class="label">LOCATION</div><div class="value" id="loc">—</div></div>
+<div class="box"><div class="label">INVENTORY</div><div class="value" id="inv">Empty</div></div>
+<div class="box"><div class="label">FIELD NOTES</div><div class="value" id="notes">No notes yet.</div></div>
+<div class="box"><div class="label">MAP / CONNECTIONS</div><div class="value" id="map">Unknown</div></div>
+</aside></div></main>
+<footer><span>OFFLINE-FRIENDLY · NO ACCOUNT · NO PURCHASES</span><span>CHAPTER TWO · YOUR CHOICES MATTER</span></footer>
+</div>
+<script>
+const $=id=>document.getElementById(id),out=$('story');
+const rooms={
+square:{name:'The Quiet Square',desc:'The elevator doors part onto a city street beneath a colorless sky. Buildings lean inward as if listening. A dry fountain occupies the square. A woman in a patched coat watches you from the steps. Streets lead north and east; the elevator waits below.',exits:{down:'lift',north:'market',east:'station'},items:['cracked compass'],look:{fountain:'At the bottom lies a brass plaque: “A city is a story everyone agrees to remember.”',woman:'She has a scar across one eyebrow and a small brass bird pinned to her coat.'}},
+lift:{name:'The Lift',desc:'The elevator from the Hollow opens onto the Quiet Square. The doors shiver as though they would rather close.',exits:{up:'square'},items:[],look:{panel:'The display reads: SURFACE — MEMORY INTEGRITY 12%.'}},
+market:{name:'The Empty Market',desc:'Stalls stand in neat rows. Their signs list things no one sells anymore: NAMES, YESTERDAYS, TOMORROW. A shuttered shop has a brass lock. The square is south; a narrow lane runs west.',exits:{south:'square',west:'alley'},items:['paper bird'],look:{signs:'A handwritten note says: “The keeper trades in truth, not coin.”',lock:'A brass lock with a bird-shaped keyhole.'}},
+alley:{name:'The Listening Alley',desc:'The walls are covered in old announcements. A payphone rings although its cord has been cut. The market is east; a door marked RECORDS stands west.',exits:{east:'market',west:'records'},items:['blue thread'],look:{phone:'The receiver whispers: “Find what the city forgot. Then ask who benefits.”'}},
+records:{name:'Records Office',desc:'Filing cabinets stretch into the dark. A clerk with ink-black fingertips sits behind a desk. The alley is east. A stairwell descends north.',exits:{east:'alley',north:'underworks'},items:['file 1984'],look:{clerk:'The clerk looks up. “Mara sent you? Then you have already been remembered once.”',cabinet:'One drawer is labeled ELIAS. It is locked with a tiny paper seal.'}},
+underworks:{name:'The Underworks',desc:'Pipes cross a low brick tunnel. A maintenance robot is stuck beside a dead junction box. The Records Office is south; a ladder climbs east.',exits:{south:'records',east:'rooftops'},items:['glass lens'],look:{robot:'Its display flashes: NEEDS A VOICE PRINT. Its speaker crackles: “Mara… please…”',junction:'A fuse socket and a frayed cable. The cable could use insulation.'}},
+rooftops:{name:'The Rooftops',desc:'You emerge among slate roofs and antennae. A huge broadcast tower looms north. The underworks ladder is west; a footbridge leads east.',exits:{west:'underworks',north:'tower',east:'observatory'},items:['copper wire'],look:{tower:'The tower broadcasts a low pulse, like a heartbeat.',sky:'There are no stars. Just tiny squares of static.'}},
+observatory:{name:'The Observatory',desc:'A brass telescope points at a blank patch of sky. A mechanical astronomer turns its head as you enter. The rooftops are west.',exits:{west:'rooftops'},items:['star chart'],look:{telescope:'The telescope is aimed at a constellation shaped like a key.'}},
+tower:{name:'Broadcast Tower',desc:'A spiral staircase winds around a humming transmitter. A locked control booth overlooks the city. The rooftops are south; a service bridge leads east.',exits:{south:'rooftops',east:'archive'},items:['signal key'],look:{transmitter:'A label reads: MEMORY RESTORE — AUTHORIZATION REQUIRED.',booth:'The booth lock has a narrow slot shaped like a lens.'}},
+archive:{name:'The City Archive',desc:'Rows of memory reels rotate behind glass. A recording console waits at the center. The tower is west. A sealed vault door stands north.',exits:{west:'tower',north:'vault'},items:['memory reel'],look:{console:'A voice says: “Playback requires a witness.”',vault:'The vault has three empty sockets: LENS, SIGNAL, and TRUTH.'}},
+vault:{name:'The First Memory',desc:'A circular chamber glows with pale light. A single chair faces a wall of moving images. The archive lies south. A narrow door leads east.',exits:{south:'archive',east:'garden'},items:[],look:{images:'You see the Hollow being built. You see yourself beside a woman who looks like Mara. You hear: “If I forget, bring me back.”'}},
+garden:{name:'The Unremembered Garden',desc:'Grass grows through cracked tile. A tree bears paper leaves covered in names. The vault is west. A stone gate opens north.',exits:{west:'vault',north:'gate'},items:['seed'],look:{tree:'One paper leaf bears the name ELIAS. Another bears MARA. A third is blank.'}},
+gate:{name:'The Edge of the Story',desc:'Beyond the gate is a white horizon. A console stands beside it, waiting for a final choice. The garden is south.',exits:{south:'garden'},items:[],look:{console:'The console offers three commands: RESTORE, RELEASE, or REWRITE.'}}
+};
+let room='lift',inv=[],flags={},moves=0,notes=[];
+const aliases={'lens':'glass lens','glass lens':'glass lens','wire':'copper wire','copper wire':'copper wire','reel':'memory reel','memory reel':'memory reel','key':'signal key','signal key':'signal key','bird':'paper bird','paper bird':'paper bird','thread':'blue thread','file':'file 1984','chart':'star chart'};
+function say(t,c=''){let p=document.createElement('p');p.textContent=t;if(c)p.className=c;out.appendChild(p);out.scrollTop=out.scrollHeight}
+function norm(s){s=s.trim().toLowerCase().replace(/^(the|a|an)\s+/,'');return aliases[s]||s}
+function has(s){return inv.includes(norm(s))}
+function itemsHere(){return rooms[room].items.filter(x=>!flags['taken:'+room+':'+x])}
+function render(){$('loc').textContent=rooms[room].name;$('inv').textContent=inv.length?inv.join(', '):'Empty';$('notes').textContent=notes.length?notes.slice(-5).join(' · '):'No notes yet.';$('session').textContent='CHAPTER 02 · MOVES '+moves+(flags.ending?' · ENDING FOUND':'');$('map').textContent='SQUARE — MARKET — ALLEY — RECORDS\n   |          |                 |\n  LIFT      (shops)          UNDERWORKS\n                               |\n                            ROOFTOPS — OBSERVATORY\n                               |\n                             TOWER — ARCHIVE\n                                       |\n                                      VAULT — GARDEN — GATE'}
+function describe(){let r=rooms[room];say(r.name.toUpperCase(),'room');say(r.desc);let a=itemsHere();if(a.length)say('You notice: '+a.join(', ')+'.','system');say('Exits: '+Object.keys(r.exits).join(', ').toUpperCase()+'.','system');render()}
+function move(d){let dest=rooms[room].exits[d];if(!dest){say('You cannot go that way.','warn');return}
+if(dest==='records'&&!flags.recordsOpen){say('The records door is sealed by a paper emblem. Perhaps something delicate can lift it.','warn');return}
+if(dest==='tower'&&!flags.towerOpen){say('The tower entrance is locked. It needs an authorized signal key.','warn');return}
+if(dest==='archive'&&!flags.archiveOpen){say('A service bridge ends at a locked archive door.','warn');return}
+if(dest==='vault'&&!flags.vaultOpen){say('The vault door has three empty sockets.','warn');return}
+if(dest==='garden'&&!flags.vaultOpen){say('The eastern door is sealed.','warn');return}
+if(dest==='gate'&&!flags.gateOpen){say('The stone gate is covered in names. One name is missing.','warn');return}
+room=dest;say('You travel '+d+'.','system');describe()}
+function examine(t){let r=rooms[room];if(!t||t==='room'){describe();return}let k=Object.keys(r.look).find(x=>t.includes(x)||x.includes(t));if(k){say(r.look[k]);return}if(t.includes('mara'))say('Mara is guarded, but her eyes soften when you mention Elias.');else if(t.includes('bird')&&has('paper bird'))say('A folded paper bird. Its wing is marked with a tiny sun.');else say('You study it. The details refuse to settle into focus.')}
+function take(t){let q=norm(t),x=itemsHere().find(z=>z===q||z.includes(q)||q.includes(z));if(!x){say('You do not see that here.','warn');return}inv.push(x);flags['taken:'+room+':'+x]=true;say('Taken: '+x+'.','system')}
+function use(t){let m=t.match(/^(.+?)\s+(?:on|with|in|into|to)\s+(.+)$/),a=norm(m?m[1]:t),b=(m?m[2]:'').replace(/^(the|a|an)\s+/,'');
+if(room==='alley'&&a==='paper bird'&&(b.includes('door')||b.includes('seal')||b.includes('records'))&&has(a)){flags.recordsOpen=true;say('You slide the paper bird into the paper seal on the Records Office door. Its folded wing lifts the latch. The door clicks open.','room');return}
+if(room==='rooftops'&&a==='signal key'&&(b.includes('tower')||b.includes('door')||b.includes('lock'))&&has(a)){flags.towerOpen=true;say('The signal key warms in your hand. The tower lock recognizes it and releases.','room');return}
+if(room==='underworks'&&a==='blue thread'&&b.includes('cable')&&has(a)){flags.robotFixed=true;say('You wrap the frayed cable in blue thread. The junction sparks awake. The robot turns its head. “Mara,” it says. “I remember her voice.”');return}
+if(room==='underworks'&&a==='glass lens'&&b.includes('robot')&&has(a)){flags.voicePrint=true;say('You fit the lens into the robot’s optical sensor. It projects a voice pattern: MARA — AUTHORIZED.');return}
+if(room==='tower'&&a==='signal key'&&b.includes('booth')&&has(a)){flags.archiveOpen=true;say('The signal key opens the booth. Inside, the transmitter console prints a route to the City Archive. The archive door unlocks.','room');return}
+if(room==='tower'&&a==='glass lens'&&b.includes('booth')&&has(a)){flags.towerOpen=true;say('The lens catches a hidden beam. A lock releases with a soft click.');return}
+if(room==='archive'&&a==='memory reel'&&b.includes('console')&&has(a)){flags.reelPlayed=true;say('The reel plays. A woman’s voice: “Elias, if you are hearing this, the city has made you forget me. I am Mara. You asked me to build a place where grief could not reach you.”','warn');notes.push('Memory reel: Mara built the Hollow with Elias');return}
+if(room==='archive'&&a==='glass lens'&&b.includes('socket')&&has(a)){flags.lensSet=true;say('The lens settles into the first vault socket.');return}
+if(room==='archive'&&a==='signal key'&&b.includes('socket')&&has(a)){flags.keySet=true;say('The signal key fits the second socket.');return}
+if(room==='archive'&&a==='file 1984'&&b.includes('socket')&&has(a)){flags.truthSet=true;say('The file unfolds into a strip of silver film. The third socket accepts it.');return}
+if(room==='archive'&&b.includes('vault')&&(flags.lensSet&&flags.keySet&&flags.truthSet)){flags.vaultOpen=true;say('All three sockets glow. The vault door opens.','room');return}
+if(room==='garden'&&a==='seed'&&b.includes('tree')&&has(a)){flags.gateOpen=true;say('You plant the seed. A new branch grows instantly, bearing a blank paper leaf. The gate unlocks.');return}
+say('Nothing happens. Try a different item or examine the object more closely.','warn')}
+function talk(t){if(room==='square'&&(t.includes('mara')||t==='')){if(!flags.maraTalk){flags.maraTalk=true;say('“You came up from below,” the woman says. “Then the Hollow worked. I am Mara. The city has been editing its own past. Find the Records Office. Bring me proof that Elias existed.”');notes.push('Mara wants proof that Elias existed')}else say('Mara says: “The Records Office. Look for the file marked 1984. And do not trust the broadcast.”');return}
+if(room==='records'&&(t.includes('clerk')||t==='')){say('The clerk says: “Names are currency here. Elias paid with his. The file is sealed, but paper remembers paper.”');notes.push('Clerk: paper can lift the seal');return}
+if(room==='underworks'&&t.includes('robot')){say(flags.robotFixed?'The robot says: “Mara’s voice is the key. I have kept it safe.”':'The robot crackles: “I cannot speak until my cable is repaired.”');return}
+if(room==='observatory'){say('The astronomer says: “The stars are not above us. They are memories we have not looked at yet.”');notes.push('Astronomer: stars are unremembered memories');return}
+say('No one answers.','system')}
+function give(t){let m=t.match(/^(.+?)\s+to\s+(.+)$/);if(!m){say('Try GIVE [ITEM] TO [PERSON].','warn');return}let a=norm(m[1]),who=m[2];if(!has(a)){say('You are not carrying that.','warn');return}
+if(room==='square'&&who.includes('mara')&&a==='file 1984'){inv=inv.filter(x=>x!==a);flags.maraProof=true;say('Mara studies the file. “So I did not imagine him.” She gives you a signal key.');if(!has('signal key'))inv.push('signal key');notes.push('Mara confirmed Elias was real');return}
+say('They do not seem to want that.','warn')}
+function execute(raw){let s=raw.trim().toLowerCase().replace(/[.!?]/g,'');if(!s)return;moves++;say('> '+raw);let p=s.split(/\s+/),v=p[0],a=p.slice(1).join(' ');
+if(['help','?'].includes(v))say('LOOK · EXAMINE [THING] · TAKE [ITEM] · GO [DIRECTION] · NORTH/SOUTH/EAST/WEST/UP/DOWN · INVENTORY · MAP · TALK TO MARA · GIVE [ITEM] TO [PERSON] · USE [ITEM] ON [OBJECT] · READ [THING] · SAVE · LOAD.','system');
+else if(['look','l'].includes(v))describe();
+else if(['inventory','inv','i'].includes(v))say(inv.length?'You carry: '+inv.join(', '):'Your pockets are empty.','system');
+else if(v==='map')say($('map').textContent,'system');
+else if(['north','south','east','west','up','down','n','s','e','w','u','d','go','walk'].includes(v)){let d=({n:'north',s:'south',e:'east',w:'west',u:'up',d:'down'})[v]||(['go','walk'].includes(v)?a:v);move(d)}
+else if(['take','get','grab'].includes(v))take(a.replace(/^up /,''));
+else if(['examine','inspect','x'].includes(v))examine(a);
+else if(v==='use')use(a);
+else if(v==='talk'){let who=a.replace(/^to /,'');talk(who)}
+else if(v==='give')give(a);
+else if(v==='read'){if(a.includes('file')&&has('file 1984'))say('FILE 1984: SUBJECT ELIAS. Memory extraction authorized by M. Vale. Status: voluntarily erased.');else if(a.includes('reel')&&has('memory reel'))use('memory reel on console');else say('You cannot read that right now.','warn')}
+else if(v==='open'){if(room==='archive'&&a.includes('vault')&&flags.lensSet&&flags.keySet&&flags.truthSet){flags.vaultOpen=true;say('The vault opens.','room')}else say('It will not open.','warn')}
+else if(v==='restore'&&room==='gate'){flags.ending='RESTORE';say('You choose RESTORE. The city remembers every name, every grief, every goodbye. Mara stands beside you as the first stars return. ENDING: THE REMEMBERING CITY.','room')}
+else if(v==='release'&&room==='gate'){flags.ending='RELEASE';say('You choose RELEASE. The city dissolves into a thousand lights. No one is trapped in memory anymore. ENDING: LETTING GO.','room')}
+else if(v==='rewrite'&&room==='gate'){flags.ending='REWRITE';say('You choose REWRITE. A blank page appears. You write a new beginning—not a perfect past, but a future that belongs to everyone. ENDING: THE FIRST PAGE.','room')}
+else if(v==='save')save();
+else if(v==='load')load();
+else say('The city does not understand. Type HELP for commands.','warn');
+render()}
+function save(){localStorage.setItem('hollowChapter2',JSON.stringify({room,inv,flags,moves,notes}));say('CHAPTER TWO SAVED LOCALLY.','system')}
+function load(){let s=localStorage.getItem('hollowChapter2');if(!s){say('No Chapter Two save found.','warn');return}try{let d=JSON.parse(s);({room,inv,flags,moves,notes}=d);say('SESSION RESTORED.','system');describe()}catch(e){say('Save data could not be read.','danger')}}
+function restart(){room='lift';inv=[];flags={};moves=0;notes=[];out.innerHTML='';say('THE LIFT SHUDDERS. THE DOORS OPEN.');say('You step into a city that seems to have been waiting for you. A woman watches from the square.');describe()}
+$('command').addEventListener('keydown',e=>{if(e.key==='Enter'){let v=e.target.value;e.target.value='';execute(v)}});
+document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>execute(b.dataset.cmd));$('save').onclick=save;$('load').onclick=load;$('restart').onclick=()=>{if(confirm('Start Chapter Two over?'))restart()};
+restart();
+</script></body></html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE HOLLOW — Chapter Three: The Last Signal</title>
+<style>
+:root{--green:#8cff9b;--dim:#4f9c60;--bg:#050b07;--panel:#09150d;--line:#245a32;--amber:#ffd479}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#102216 0,#050b07 65%);color:var(--green);font:16px/1.55 "Courier New",monospace}
+main{max-width:980px;margin:24px auto;padding:18px}
+header{border:1px solid var(--line);background:#07110a;padding:18px 20px;margin-bottom:14px;box-shadow:0 0 24px #173b2340}
+h1{font-size:clamp(22px,4vw,34px);letter-spacing:3px;margin:0;color:#c2ffca;text-shadow:0 0 12px #53ff76}
+.subtitle{color:var(--dim);letter-spacing:2px;font-size:12px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 245px;gap:14px}
+section,.sidebox{border:1px solid var(--line);background:#07110aeF;padding:15px}
+#log{height:440px;overflow:auto;white-space:pre-wrap;padding-right:8px}
+.entry{margin:0 0 14px}.sys{color:var(--amber)}.muted{color:#6ca77a}.roomtitle{color:#d1ffd6;font-weight:bold;letter-spacing:1px}
+form{display:flex;gap:8px;margin-top:12px}input{flex:1;min-width:0;background:#020704;border:1px solid var(--dim);color:var(--green);padding:13px;font:inherit;outline:none}input:focus{box-shadow:0 0 10px #4dff6b55}
+button{background:#102516;border:1px solid var(--dim);color:var(--green);padding:10px 13px;font:inherit;cursor:pointer}button:hover{background:#1a3c24}
+.sidebox{margin-bottom:14px}.sidebox h3{margin:0 0 8px;font-size:13px;color:#c2ffca;letter-spacing:2px}.sidebox p,.sidebox li{font-size:13px;color:#8bc997;margin:4px 0}.sidebox ul{padding-left:18px;margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.actions button{font-size:12px;padding:6px 8px}
+#status{color:var(--amber);font-size:12px;margin-top:8px}
+footer{color:#477c53;font-size:11px;margin-top:14px;text-align:center}
+@media(max-width:720px){.grid{grid-template-columns:1fr}#log{height:390px}.side{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sidebox{margin:0}}
+</style>
+</head>
+<body><main>
+<header><h1>THE HOLLOW</h1><div class="subtitle">CHAPTER THREE — THE LAST SIGNAL</div><p class="muted">“A message is only a memory that learned how to travel.”</p></header>
+<div class="grid">
+<section>
+<div id="log" aria-live="polite"></div>
+<form id="commandForm"><input id="command" autocomplete="off" placeholder="What do you do?" autofocus><button>ENTER</button></form>
+<div class="actions">
+<button onclick="send('look')">LOOK</button><button onclick="send('inventory')">INVENTORY</button><button onclick="send('map')">MAP</button><button onclick="send('help')">HELP</button><button onclick="saveGame()">SAVE</button><button onclick="loadGame()">LOAD</button>
+</div><div id="status"></div>
+</section>
+<aside class="side">
+<div class="sidebox"><h3>LOCATION</h3><p id="loc">—</p><h3 style="margin-top:12px">EXITS</h3><p id="exits">—</p></div>
+<div class="sidebox"><h3>INVENTORY</h3><ul id="items"><li>Empty</li></ul></div>
+<div class="sidebox"><h3>FIELD NOTES</h3><ul id="notes"><li>No notes yet.</li></ul></div>
+<div class="sidebox"><h3>OBJECTIVE</h3><p id="objective">Find the source of the signal.</p></div>
+</aside></div>
+<footer>SELF-CONTAINED HTML • LOCAL SAVE • NO ACCOUNTS • NO PAID SERVICES</footer></main>
+<script>
+const rooms={
+"shore":{name:"The Black Shore",desc:"A cold tide slides over black glass. Behind you, the city has gone dark. Ahead, a lighthouse blinks beneath a sky with no stars. A radio crackles from a half-buried buoy.",exits:{north:"causeway",east:"wreck"},items:["brass token"],objects:["buoy","radio","water"]},
+"causeway":{name:"The Causeway",desc:"A narrow road runs over a sea that makes no sound. Three signal pylons stand in a row. Their lenses are dark, but one has a maintenance hatch.",exits:{south:"shore",north:"relay"},items:[],objects:["pylon","hatch","lens"]},
+"wreck":{name:"The Wreck of the Orison",desc:"A research vessel leans against the rocks. Its cabin smells of salt and warm dust. A sealed locker is bolted beneath the navigation table.",exits:{west:"shore",down:"hold"},items:["coil of wire"],objects:["locker","table","logbook"]},
+"hold":{name:"The Flooded Hold",desc:"Water reaches your ankles. A metal case is chained to a support beam. Something taps from inside it, keeping time with the lighthouse.",exits:{up:"wreck"},items:["glass prism"],objects:["case","chain","water"]},
+"relay":{name:"The Relay Station",desc:"A squat concrete building hums with power. A console displays three empty channels. A service door leads east; a stairwell descends into the cliff.",exits:{south:"causeway",east:"orchard",down:"tunnel"},items:["fuse"],objects:["console","channels","door","stairwell"]},
+"orchard":{name:"The Glass Orchard",desc:"Transparent trees grow from pale sand. Inside each trunk, a tiny scene repeats: a birthday, a goodbye, a room with a red door. Mara stands beside a tree that shows no reflection.",exits:{west:"relay",north:"lighthouse"},items:[],objects:["mara","tree","reflection"]},
+"tunnel":{name:"The Listening Tunnel",desc:"The tunnel is lined with old speakers. They whisper fragments of your earlier choices. A circular socket waits in a wall of slate.",exits:{up:"relay",east:"archive"},items:["ceramic key"],objects:["speakers","socket","slate"]},
+"archive":{name:"The Signal Archive",desc:"A cavernous room of tape spools and suspended glass. One reel turns by itself. A terminal asks for a phrase, not a password.",exits:{west:"tunnel"},items:["recording spool"],objects:["terminal","reel","shelves"]},
+"lighthouse":{name:"The Lighthouse",desc:"The lamp room is empty except for a rotating beam that points down, through the floor. A locked brass panel is set into the lens mechanism.",exits:{south:"orchard",up:"lantern"},items:[],objects:["lens","panel","beam"]},
+"lantern":{name:"The Lantern Chamber",desc:"At the top of the lighthouse, the lamp burns with a blue flame. A transmitter sits beneath it. Its display reads: ONE VOICE / THREE POSSIBLE TOMORROWS.",exits:{down:"lighthouse"},items:[],objects:["transmitter","flame","switch"]},
+};
+let state={room:"shore",inv:[],flags:{radio:false,locker:false,case:false,console:false,mara:false,socket:false,phrase:false,panel:false,ending:false},notes:[],moves:0};
+const $=id=>document.getElementById(id), log=$("log");
+function say(t,cls=""){let p=document.createElement("p");p.className="entry "+cls;p.textContent=t;log.appendChild(p);log.scrollTop=log.scrollHeight}
+function note(t){if(!state.notes.includes(t)){state.notes.push(t);say("NOTE ADDED: "+t,"sys")}}
+function has(x){return state.inv.includes(x)}
+function take(x){if(!has(x)){state.inv.push(x);say("Taken: "+x,"sys");render()}else say("You already have that.")}
+function move(dir){let dest=rooms[state.room].exits[dir];if(!dest){say("You cannot go that way.");return}if(dest==="lantern"&&!state.flags.panel){say("The upper stair is sealed behind the brass panel.");return}state.room=dest;state.moves++;describe()}
+function describe(){let r=rooms[state.room];say(r.name,"roomtitle");say(r.desc);if(r.items.length)say("You can see: "+r.items.filter(x=>!state.flags["taken_"+x]).join(", "),"muted");render()}
+function render(){let r=rooms[state.room];$("loc").textContent=r.name;$("exits").textContent=Object.keys(r.exits).join(", ")||"none";$("items").innerHTML=state.inv.length?state.inv.map(x=>"<li>"+x+"</li>").join(""):"<li>Empty</li>";$("notes").innerHTML=state.notes.length?state.notes.map(x=>"<li>"+x+"</li>").join(""):"<li>No notes yet.</li>";$("objective").textContent=state.flags.ending?"The signal has been answered.":!state.flags.radio?"Find a way to hear the buoy's message.":!state.flags.console?"Restore power to the relay and align its channels.":!state.flags.mara?"Find Mara in the Glass Orchard.":!state.flags.phrase?"Discover the phrase hidden in the archive.":!state.flags.panel?"Open the lighthouse panel.":"Reach the Lantern Chamber and choose what the signal becomes."}
+function get(item){let r=rooms[state.room];let match=r.items.find(x=>x===item||x.includes(item));if(match&&!state.flags["taken_"+match]){state.flags["taken_"+match]=true;take(match)}else say("You do not see that here.")}
+function use(item,target){let f=state.flags;
+if((item.includes("brass token")||item==="token")&&state.room==="wreck"&&target.includes("locker")){f.locker=true;say("The token turns in the locker. Inside: a dry notebook and a tiny switch. The notebook says: 'The sea keeps what the city edits.'");note("The buoy's rhythm is a key; the sea preserves what the city edits.");return}
+if(item.includes("wire")&&state.room==="wreck"&&target.includes("locker")){say("The wire cannot open the locker. Try the token.");return}
+if(item.includes("prism")&&state.room==="lighthouse"){say("You hold the prism in the beam. A hidden line appears: LISTEN / REMEMBER / ANSWER.");note("The lighthouse beam reveals three words: LISTEN, REMEMBER, ANSWER.");return}
+if(item.includes("wire")&&state.room==="relay"&&target.includes("console")){if(!has("fuse")){say("The console needs a fuse as well as a connection.");return}f.console=true;say("You bridge the broken contact with wire and seat the fuse. The relay wakes. Three channels glow.");note("Relay channels: low, middle, high. The correct order is carried by the buoy's pulse.");return}
+if(item.includes("fuse")&&state.room==="relay"&&target.includes("console")){if(!has("coil of wire")){say("The fuse fits, but the contact is broken. You need wire.");return}f.console=true;say("The fuse clicks into place. You repair the contact with the coil of wire. The relay wakes.");note("The relay is powered.");return}
+if(item.includes("ceramic key")&&state.room==="tunnel"&&target.includes("socket")){f.socket=true;say("The key turns. The speakers stop whispering. One voice remains: 'Say what the city could not keep.'");note("The archive terminal wants a phrase about what the city failed to keep.");return}
+if(item.includes("spool")&&state.room==="archive"&&target.includes("terminal")){say("The recording spool plays a child's voice: 'Mara said the name is not a place. It is the promise we made before we were afraid.'");note("The phrase is: WE WERE HERE.");return}
+if(item.includes("prism")&&state.room==="lighthouse"&&target.includes("panel")){f.panel=true;say("The prism splits the blue beam across the brass. The panel unlocks with a soft click.");return}
+if(item.includes("recording")&&state.room==="archive"){say("The spool repeats: 'WE WERE HERE.'");note("The archive phrase: WE WERE HERE.");return}
+say("That combination does not seem to work.");
+}
+function interact(target,extra=""){let f=state.flags,r=state.room;
+if(r==="shore"&&target.includes("buoy")){f.radio=true;say("The buoy's radio clears. A voice, almost yours, says: 'Three pulses. Long, short, short. Do not trust the first tomorrow.'");note("Buoy pattern: LONG, SHORT, SHORT. The first tomorrow is a lie.");return}
+if(r==="shore"&&target.includes("radio")){interact("buoy");return}
+if(r==="wreck"&&target.includes("locker")){say(f.locker?"The locker hangs open.":"The locker has a brass keyway.");return}
+if(r==="relay"&&target.includes("console")){say(f.console?"Three channels are live. Their lights pulse long, short, short.":"The console is dead. A fuse slot and a broken contact wait.");return}
+if(r==="orchard"&&target.includes("mara")){if(!f.mara){f.mara=true;say("Mara turns. 'You made it. I remember both endings now—the one where the city was restored, and the one where it was allowed to forget. Neither was the whole truth.'");say("'The signal is older than the city. It was sent by the people who built the Hollow to ask whether memory should be kept, shared, or set free.'");note("Mara remembers the earlier endings. The signal asks for a choice: keep, share, or release.");}else say("Mara: 'Don't let the signal make the choice for you.'");return}
+if(r==="archive"&&target.includes("terminal")){if(!f.socket){say("The terminal is sealed. A ceramic key might fit the slate socket in the tunnel.");return}say("The terminal waits for a phrase. Try: SAY WE WERE HERE.");return}
+if(r==="lighthouse"&&target.includes("panel")){say(f.panel?"The panel is open.":"A brass panel covers the upper stair mechanism. Its surface refracts light.");return}
+if(r==="lantern"&&target.includes("transmitter")){say("The transmitter offers three commands: KEEP, SHARE, RELEASE. Type one to decide the fate of the signal.");return}
+if(r==="lantern"&&target.includes("switch")){say("The switch is guarded by a question: what should survive us?");return}
+say("Nothing answers.");
+}
+function finish(choice){state.flags.ending=true;say("TRANSMISSION ACCEPTED: "+choice,"sys");if(choice==="KEEP")say("You bind the signal to the lighthouse. Every memory remains, bright and intact—but no one else can change it. Mara watches the beam turn inward. 'A safe thing can still become a prison.'");if(choice==="SHARE")say("You send the signal outward in fragments, so every listener can carry a piece and add their own. The sea fills with distant lights. Mara smiles. 'A memory is stronger when it has more than one witness.'");if(choice==="RELEASE")say("You let the signal dissolve into the tide. Nothing is preserved exactly. Nothing is owned. For the first time, the Hollow is quiet. Mara whispers, 'Then let the living make something new.'");say("THE END — CHAPTER THREE: THE LAST SIGNAL","roomtitle");note("Ending chosen: "+choice+". Your next chapter can begin from this transmission.");render()}
+function send(raw){let s=raw.trim().toLowerCase();if(!s)return;$("command").value="";say("> "+raw,"muted");if(state.flags.ending){say("The story has ended. Reload the page to begin again, or load a saved game.");return}
+if(["n","north","s","south","e","east","w","west","up","down"].includes(s)){move(({n:"north",s:"south",e:"east",w:"west"})[s]||s);return}
+if(s.startsWith("go ")){move(s.slice(3));return}
+if(s==="look"||s==="l"){describe();return}
+if(s==="inventory"||s==="i"){say(state.inv.join(", ")||"You are carrying nothing.");return}
+if(s==="map"){say("BLACK SHORE — CAUSEWAY — RELAY — ORCHARD — LIGHTHOUSE — LANTERN\n      WRECK / HOLD       TUNNEL — ARCHIVE","muted");return}
+if(s==="help"){say("Commands: LOOK, NORTH/SOUTH/EAST/WEST/UP/DOWN, GO [direction], TAKE [item], USE [item] ON [object], EXAMINE [object], TALK TO [person], SAY [phrase], INVENTORY, MAP, SAVE, LOAD.");say("Explore carefully. The game understands simple natural commands.");return}
+if(s.startsWith("take ")){get(s.slice(5));return}
+if(s.startsWith("get ")){get(s.slice(4));return}
+if(s.startsWith("talk to ")){interact(s.slice(8));return}
+if(s.startsWith("talk ")){interact(s.slice(5));return}
+if(s.startsWith("examine ")){interact(s.slice(8));return}
+if(s.startsWith("look at ")){interact(s.slice(8));return}
+if(s.startsWith("use ")){let m=s.slice(4).split(" on ");use(m[0],m[1]||"");return}
+if(s.startsWith("say ")){let phrase=s.slice(4).replace(/[“”"]/g,"");if(state.room==="archive"&&phrase==="we were here"){state.flags.phrase=true;say("The terminal accepts the phrase. The reel stops. A recording plays: 'At the end, do not choose for the dead. Choose for those who come after.'");note("The archive accepts WE WERE HERE.");return}if(state.room==="lantern"&&["keep","share","release"].includes(phrase)){finish(phrase.toUpperCase());return}say("The words drift away without an answer.");return}
+if(["keep","share","release"].includes(s)&&state.room==="lantern"){finish(s.toUpperCase());return}
+if(s==="save"){saveGame();return}if(s==="load"){loadGame();return}
+say("I don't understand that. Type HELP for commands.");
+}
+$("commandForm").addEventListener("submit",e=>{e.preventDefault();send($("command").value)});
+function saveGame(){localStorage.setItem("theHollowChapter3",JSON.stringify(state));$("status").textContent="GAME SAVED IN THIS BROWSER."}
+function loadGame(){let d=localStorage.getItem("theHollowChapter3");if(!d){$("status").textContent="NO SAVE FOUND.";return}try{state=JSON.parse(d);$("status").textContent="SAVE LOADED.";say("Saved game restored.","sys");describe()}catch(e){$("status").textContent="SAVE COULD NOT BE READ."}}
+say("THE HOLLOW // CHAPTER THREE","roomtitle");say("A new signal has crossed the dead sea. You wake on a shore that should not exist. The city is gone from the horizon, but its last light still flickers behind your eyes.");say("Type HELP to learn the commands. Type LOOK to inspect your surroundings.","sys");describe();
+</script></body></html>

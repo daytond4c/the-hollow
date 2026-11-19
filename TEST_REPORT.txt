@@ -1,0 +1,37 @@
+THE HOLLOW — CHAPTER FOUR QA REPORT
+Date: 17 November 2026
+Result: PASS after fixes
+
+ISSUES FOUND AND FIXED
+1. The Root Stair blocked the route down even though the brass key was placed in the Flooded Gallery. The key could not be reached. The stair now leads to the gallery immediately; the brass key opens the Machine Chapel service door.
+2. The Underlake console could remain locked forever. The awakened-ember handler was shadowed by a broader ember condition, and the console flag was not reliably set. The puzzle now has a clear sequence: use the copper wire, use the glass lens, then use the awakened ember. Only then does the engine descent open.
+3. Room contents were not included in saves, so collected objects could respawn after loading. Room item state is now serialized with the save.
+4. Older Chapter Four saves are migrated. Collected objects are removed from their original rooms; legacy ember progress is safely reapplied at the console; an ending recorded in old field notes is retained.
+5. Room descriptions now list exits and visible items. Locked exits and the exact remaining console components are identified, reducing guesswork.
+6. Added RESTART so the chapter can be replayed to reach each ending. Restart clears the Chapter Four save.
+
+TESTS RUN
+- All eight rooms loaded and were reached during the tested route.
+- All exits were traversed, including the reverse loop and the two gated exits.
+- The locked chapel door and locked Underlake descent rejected movement before their puzzles were solved.
+- The brass-key, copper-wire, glass-lens, and awakened-ember interactions were exercised.
+- MEND, OPEN, and BIND endings were each reached in separate runs.
+- Inventory commands, empty TAKE/USE handling, directions, map/help quick buttons, and restart were exercised.
+- Save/load was tested after collecting an item, at the middle of the console puzzle, and after an ending.
+- A legacy save was loaded to verify migration and preservation of an old ending.
+- Launcher links and save-status display were checked.
+- JavaScript syntax passed for all five HTML files. CSS parsing passed. Duplicate IDs, missing local links, and external script/style resources were not found.
+
+TEST LIMITATION
+A full graphical browser rendering pass was not available in this environment: Chromium navigation was blocked with ERR_BLOCKED_BY_ADMINISTRATOR. Game behavior was instead exercised with a Node.js JavaScript harness using mocked DOM elements, events, and browser storage. The archive's HTML/CSS was statically parsed. A final visual check on the user's browser is still advisable.
+
+FREE / OFFLINE STATUS
+The launcher and chapters use inline HTML, CSS, and JavaScript. No paid service, account, external API, external library, remote font, or network resource is required. Browser-local saves depend on the browser's storage/privacy settings.
+
+
+CHAPTER FIVE ADDITION
+- Added The Silence After as a standalone epilogue.
+- Added distinct MEND, OPEN, and BIND aftermaths plus a hidden REMEMBER ending.
+- Added launcher card, local save indicator, README instructions, and offline play.
+- Chapter Five intentionally does not import Chapter Four browser saves; the player
+  chooses the relevant aftermath at the epilogue's final archive.

@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE HOLLOW — Chapter Four: The World Beneath</title>
+<style>
+:root{--bg:#050b08;--panel:#09140f;--green:#9dffb2;--dim:#5d9a6c;--line:#285b38;--gold:#e8d28a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#102519,#050b08 65%);color:var(--green);font:15px/1.55 "Courier New",monospace}
+main{max-width:1000px;margin:auto;padding:22px 16px 50px}
+.head{border:1px solid var(--line);padding:17px;background:#07110c;text-align:center}
+.eyebrow{color:var(--dim);letter-spacing:.22em;font-size:.75rem}
+.head h1{font-size:clamp(1.5rem,5vw,2.6rem);letter-spacing:.12em;margin:5px}
+.head p{color:#a5c8ad;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;margin-top:14px}
+.screen,.side{border:1px solid var(--line);background:#07110c;padding:16px}
+.screen{min-height:420px}
+.scene{color:var(--gold);font-size:1.05rem;margin-bottom:10px}
+.story{white-space:pre-wrap;min-height:160px;color:#c0e4c8}
+.log{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px;color:var(--dim);font-size:.85rem;max-height:120px;overflow:auto}
+.side h3{font-size:.8rem;color:var(--dim);letter-spacing:.16em;margin:0 0 8px}
+.side section+section{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+.side ul{margin:0;padding-left:18px;color:#b8d8bf;font-size:.85rem}
+.entry{display:flex;gap:8px;margin-top:14px}
+.entry input{flex:1;min-width:0;background:#020704;color:var(--green);border:1px solid var(--line);padding:13px;font:inherit;outline:none}
+.entry button,.quick button,#load{background:#102719;border:1px solid var(--dim);color:var(--green);padding:10px 13px;font:inherit;cursor:pointer}
+.entry button:hover,.quick button:hover,#load:hover{background:#1a3b26}
+.entry input:focus-visible,.entry button:focus-visible,.quick button:focus-visible,#load:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.quick button{font-size:.76rem;padding:6px 9px}
+.map{font-size:.76rem;color:var(--dim);white-space:pre-wrap}
+.help{color:var(--gold);font-size:.82rem}
+.ending{color:var(--gold)}
+.back{display:inline-block;color:var(--dim);margin-top:14px;font-size:.8rem}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;gap:14px}.side section+section{border:0;margin:0;padding:0}}
+@media(max-width:420px){.side{grid-template-columns:1fr}.screen,.side{padding:12px}.entry{flex-wrap:wrap}.entry input{flex-basis:100%}.entry button{width:100%}}
+</style>
+</head>
+<body>
+<main>
+<header class="head">
+  <div class="eyebrow">THE HOLLOW // ARCHIVE FOUR</div>
+  <h1>THE WORLD BENEATH</h1>
+  <p>Somewhere below every memory, something is still awake.</p>
+</header>
+<div class="layout">
+  <section class="screen" aria-label="Adventure screen">
+    <div class="scene" id="room">THE ROOT STAIR</div>
+    <div class="story" id="story" aria-live="polite"></div>
+    <div class="log" id="log" aria-live="polite">SYSTEM: Type HELP for commands.</div>
+    <form class="entry" id="form">
+      <input id="cmd" autocomplete="off" placeholder="What do you do?" aria-label="Adventure command" autofocus>
+      <button type="submit">ENTER</button>
+    </form>
+    <div class="quick" aria-label="Quick commands">
+      <button type="button" data-cmd="look">LOOK</button>
+      <button type="button" data-cmd="map">MAP</button>
+      <button type="button" data-cmd="inventory">INVENTORY</button>
+      <button type="button" data-cmd="help">HELP</button>
+      <button type="button" data-cmd="save">SAVE</button>
+      <button type="button" data-cmd="restart">RESTART</button>
+    </div>
+  </section>
+  <aside class="side">
+    <section><h3>INVENTORY</h3><ul id="inventory"><li>empty</li></ul></section>
+    <section><h3>FIELD NOTES</h3><ul id="notes"><li>The descent began.</li></ul></section>
+    <section><h3>MAP FRAGMENT</h3><div class="map" id="map"></div></section>
+    <section>
+      <h3>ARCHIVE</h3>
+      <div class="help">Saves stay in this browser. Each chapter has its own save.</div>
+      <button type="button" id="load" style="margin-top:8px">LOAD SAVE</button>
+    </section>
+  </aside>
+</div>
+<a class="back" href="index.html">← RETURN TO ARCHIVE TERMINAL</a>
+</main>
+<script>
+"use strict";
+
+const SAVE_KEY = "theHollowChapter4";
+const ROOMS = {
+  stair: {
+    name: "THE ROOT STAIR",
+    desc: "A staircase descends through black stone threaded with pale roots. Far below, a slow mechanical pulse answers your heartbeat. A rusted lift cage waits beside a sealed maintenance hatch. A small inscription is cut into the stone.",
+    exits: {down: "gallery", up: "threshold"}
+  },
+  gallery: {
+    name: "THE FLOODED GALLERY",
+    desc: "Cold water covers the floor. Statues stand shoulder-deep, each with its face carefully erased. A brass key glints beneath a collapsed plinth. A narrow passage leads east.",
+    exits: {up: "stair", east: "chapel"}
+  },
+  chapel: {
+    name: "THE MACHINE CHAPEL",
+    desc: "Rows of silent machines kneel toward a dark altar. A coil of copper wire hangs from a broken instrument. A locked service door leads north.",
+    exits: {west: "gallery", north: "kiln"}
+  },
+  kiln: {
+    name: "THE MEMORY KILN",
+    desc: "A furnace shaped like an open mouth glows with a coal-red ember. A glass lens rests in a tray beside it. The heat seems to whisper names.",
+    exits: {south: "chapel", east: "underlake"}
+  },
+  underlake: {
+    name: "THE UNDERLAKE",
+    desc: "An underground sea stretches into darkness. A stone console stands on a dry island. Its sockets are empty, and an inscription reads: LIGHT MUST REMEMBER ITS SOURCE.",
+    exits: {west: "kiln", down: "engine"}
+  },
+  engine: {
+    name: "THE ROOT ENGINE",
+    desc: "The Hollow's original engine turns beneath the lake. Three great cables feed a heart of black glass. One cable hangs loose. A circular door is marked with a symbol you saw in the kiln.",
+    exits: {up: "underlake", east: "split"}
+  },
+  split: {
+    name: "THE SPLIT CHAMBER",
+    desc: "Two versions of the same room overlap: one bright with impossible morning, one drowned in ash. A voice speaks from both walls. 'You can mend the wound. You can open it. You can take its place.'",
+    exits: {west: "engine", north: "threshold"}
+  },
+  threshold: {
+    name: "THE FIRST THRESHOLD",
+    desc: "A round stone room. Above you, a hairline crack shows a sky that is not the sky you came from. The stair down is behind you.",
+    exits: {down: "stair", south: "split"}
+  }
+};
+
+const ITEM_HOME = {
+  "brass key": "gallery",
+  "copper wire": "chapel",
+  "glass lens": "kiln",
+  "sleeping ember": "kiln"
+};
+const ALL_ITEMS = ["brass key", "copper wire", "glass lens", "sleeping ember", "awakened ember"];
+const ENDINGS = {
+  mend: {
+    title: "THE ROOT IS MENDED",
+    text: "You join the broken memories without erasing their differences. The city above will remember its wounds, and perhaps learn to heal. Somewhere in the machinery, Mara's voice becomes a laugh."
+  },
+  open: {
+    title: "THE ROOT IS OPEN",
+    text: "You release every stored version into the world. The sky fractures into a thousand possible mornings. No one will own the past again. No one will be able to hide from it."
+  },
+  bind: {
+    title: "THE ROOT IS BOUND",
+    text: "You take the engine's place. The Hollow falls quiet, held together by a single watchful mind. The city wakes above you. You remain below, listening."
+  }
+};
+
+function createState() {
+  return {
+    room: "stair",
+    inv: [],
+    items: {
+      stair: [], gallery: ["brass key"], chapel: ["copper wire"],
+      kiln: ["glass lens", "sleeping ember"], underlake: [], engine: [], split: [], threshold: []
+    },
+    flags: {
+      service: false, read: false, emberAwake: false,
+      wired: false, lens: false, ember: false, console: false, cables: false
+    },
+    notes: ["Mara's last message: 'If you reach the roots, don't mistake the engine for the thing it serves.'"],
+    moves: 0,
+    ended: false,
+    ending: null
+  };
+}
+
+let s = createState();
+const $ = id => document.getElementById(id);
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[ch]);
+}
+
+function say(message) {
+  $("log").innerHTML = escapeHtml(message) + "<br>" + $("log").innerHTML;
+}
+
+function note(message) {
+  if (!s.notes.includes(message)) s.notes.push(message);
+}
+
+function exitIsLocked(room, direction) {
+  if (room === "chapel" && direction === "north") return !s.flags.service;
+  if (room === "underlake" && direction === "down") return !s.flags.console;
+  return false;
+}
+
+function render() {
+  const room = ROOMS[s.room];
+  $("room").textContent = room.name;
+
+  if (s.ended && s.ending && ENDINGS[s.ending]) {
+    $("story").textContent = ENDINGS[s.ending].title + "\n\n" + ENDINGS[s.ending].text +
+      (s.flags.cables ? "\n\nThe repaired cable carries the final pulse cleanly through the engine." : "") +
+      "\n\nTHE END — CHAPTER FOUR";
+    $("story").classList.add("ending");
+  } else {
+    $("story").classList.remove("ending");
+    const exits = Object.keys(room.exits).map(direction =>
+      direction.toUpperCase() + (exitIsLocked(s.room, direction) ? " (LOCKED)" : "")
+    );
+    const here = s.items[s.room] || [];
+    let detail = "\n\nEXITS: " + (exits.length ? exits.join(", ") : "NONE");
+    detail += "\nHERE: " + (here.length ? here.join(", ") : "nothing visible");
+    if (s.room === "chapel" && !s.flags.service) detail += "\nThe north service door needs the brass key.";
+    if (s.room === "underlake" && !s.flags.console) {
+      const missing = [];
+      if (!s.flags.wired) missing.push("copper wire");
+      if (!s.flags.lens) missing.push("glass lens");
+      if (!s.flags.ember) missing.push("awakened ember");
+      detail += "\nThe console still needs: " + missing.join(", ") + ".";
+    }
+    $("story").textContent = room.desc + detail;
+  }
+
+  $("inventory").innerHTML = s.inv.length
+    ? s.inv.map(item => "<li>" + escapeHtml(item) + "</li>").join("")
+    : "<li>empty</li>";
+  $("notes").innerHTML = s.notes.length
+    ? s.notes.map(item => "<li>" + escapeHtml(item) + "</li>").join("")
+    : "<li>no notes yet</li>";
+  $("map").textContent =
+    "ROOT STAIR\n" +
+    "    |\n" +
+    "FLOODED GALLERY — MACHINE CHAPEL\n" +
+    "                       |\n" +
+    "                 MEMORY KILN — UNDERLAKE\n" +
+    "                                  |\n" +
+    "                              ROOT ENGINE — SPLIT CHAMBER\n" +
+    "                                                   |\n" +
+    "                                              FIRST THRESHOLD\n" +
+    "                                                   |\n" +
+    "                                               ROOT STAIR";
+}
+
+function move(direction) {
+  const destination = ROOMS[s.room].exits[direction];
+  if (!destination) {
+    say("You cannot go that way.");
+    return;
+  }
+  if (exitIsLocked(s.room, direction)) {
+    if (s.room === "chapel") say("The service door is locked. Use the brass key here.");
+    else say("The engine access is dark. Repair the console, focus the lens, and bring the awakened ember's light.");
+    return;
+  }
+  s.room = destination;
+  s.moves += 1;
+  render();
+  say("You move " + direction + ".");
+}
+
+function normalizeItemQuery(query) {
+  return query.trim().toLowerCase().replace(/^(the|a|an)\s+/, "");
+}
+
+function take(query) {
+  const wanted = normalizeItemQuery(query);
+  if (!wanted) {
+    say("Take what?");
+    return;
+  }
+  const items = s.items[s.room] || [];
+  const index = items.findIndex(item => item.toLowerCase() === wanted || item.toLowerCase().includes(wanted));
+  if (index < 0) {
+    say("You don't see that here.");
+    return;
+  }
+  const item = items.splice(index, 1)[0];
+  if (!s.inv.includes(item)) s.inv.push(item);
+  say("Taken: " + item + ".");
+  render();
+}
+
+function findCarried(query) {
+  const wanted = normalizeItemQuery(query);
+  if (!wanted) return null;
+  return s.inv.find(item => item.toLowerCase() === wanted || item.toLowerCase().includes(wanted)) || null;
+}
+
+function useItem(query) {
+  const item = findCarried(query);
+  if (!query.trim()) {
+    say("Use what?");
+    return;
+  }
+  if (!item) {
+    say("You are not carrying that.");
+    return;
+  }
+
+  if (item === "brass key") {
+    if (s.room === "chapel") {
+      s.flags.service = true;
+      note("The chapel's service door is open.");
+      say("The brass key opens the service door. The machines begin to hum.");
+      render();
+    } else {
+      say("The brass key fits the old service mechanism. The locked door in the Machine Chapel may be its match.");
+    }
+    return;
+  }
+
+  if (item === "copper wire") {
+    if (s.room === "underlake") {
+      s.flags.wired = true;
+      note("The underlake console has been rewired.");
+      say("You bridge the broken contacts. The console wakes; its lens socket and ember well remain dark.");
+      render();
+    } else if (s.room === "engine") {
+      s.flags.cables = true;
+      note("The loose root-engine cable has been bound into place.");
+      say("You bind the loose cable into the heart's frame. The engine steadies.");
+    } else {
+      say("There is no exposed power lead here that needs the copper wire.");
+    }
+    return;
+  }
+
+  if (item === "glass lens") {
+    if (s.room === "kiln") {
+      s.flags.read = true;
+      note("The lens reveals a message in the kiln's smoke: 'THE ROOT IS A CHOICE.'");
+      say("Through the lens, letters appear in the smoke: THE ROOT IS A CHOICE. The lens warms in your hand.");
+      return;
+    }
+    if (s.room === "underlake") {
+      if (!s.flags.wired) {
+        say("The console is dead. Repair its exposed contacts with the copper wire first.");
+        return;
+      }
+      s.flags.lens = true;
+      note("The glass lens focuses the kiln's remembered light.");
+      say("The lens catches a red glimmer from far below. The console's focusing ring begins to turn.");
+      render();
+      return;
+    }
+  }
+
+  if (item === "sleeping ember") {
+    if (s.room === "kiln") {
+      s.inv = s.inv.filter(value => value !== "sleeping ember");
+      s.inv.push("awakened ember");
+      s.flags.emberAwake = true;
+      note("The memory-kiln ember has awakened without being consumed.");
+      say("You cup the ember in your hands. It wakes, burning without consuming anything.");
+      render();
+      return;
+    }
+    if (s.room === "underlake") {
+      say("The ember is still asleep. Wake it in the Memory Kiln before bringing it to the console.");
+      return;
+    }
+  }
+
+  if (item === "awakened ember" && s.room === "underlake") {
+    if (!s.flags.wired) {
+      say("The console cannot carry the ember's charge until its contacts are repaired with the copper wire.");
+      return;
+    }
+    if (!s.flags.lens) {
+      say("The console's focusing ring is dark. Use the glass lens here before applying the ember.");
+      return;
+    }
+    s.flags.ember = true;
+    s.flags.console = true;
+    note("The root console has accepted the awakened ember; the engine descent is open.");
+    say("The console drinks the ember's light. Its three indicators flare, and the descent to the Root Engine unlocks.");
+    render();
+    return;
+  }
+
+  if (item === "awakened ember" && s.room === "kiln") {
+    say("The ember is already awake. Its light should be carried to the underlake console.");
+    return;
+  }
+
+  say("Nothing changes. Try another place or another object.");
+}
+
+function talk() {
+  if (s.room === "split") {
+    say("The voice says: 'Mara remembers a world that never happened. Elias remembers a door that never opened. The engine remembers every version. Which memory will you make real?'");
+    note("The engine contains every discarded version of the city.");
+  } else if (s.room === "threshold") {
+    say("A faint transmission: 'If you can hear this, the Hollow is no longer holding its breath.'");
+  } else {
+    say("There is no one here to answer. Only the patient machinery.");
+  }
+}
+
+function finish(choice) {
+  if (s.ended) {
+    say("This chapter has ended. Type RESTART to begin again or LOAD to restore another save.");
+    return;
+  }
+  if (!s.flags.wired || !s.flags.lens || !s.flags.ember || !s.flags.console) {
+    say("The engine is not ready. Rewire the console, focus the lens, and bring it the awakened ember's light.");
+    return;
+  }
+  s.ended = true;
+  s.ending = choice;
+  note("Ending chosen: " + choice.toUpperCase());
+  render();
+  say("The final mechanism answers your choice.");
+  save();
+}
+
+function save() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({version: 1, ...s}));
+    say("Progress saved in this browser.");
+    return true;
+  } catch (error) {
+    say("SAVE FAILED. Browser storage may be unavailable; keep this tab open to preserve this session.");
+    return false;
+  }
+}
+
+function normalizeLoadedState(data) {
+  if (!data || typeof data !== "object" || !ROOMS[data.room] || !Array.isArray(data.inv) ||
+      !data.flags || typeof data.flags !== "object") {
+    throw new Error("Invalid save data");
+  }
+
+  const next = createState();
+  next.room = data.room;
+  next.inv = [...new Set(data.inv.filter(item => ALL_ITEMS.includes(item)))];
+  next.notes = Array.isArray(data.notes)
+    ? data.notes.filter(item => typeof item === "string").slice(0, 100).map(item => item.slice(0, 240))
+    : next.notes;
+  next.moves = Number.isFinite(Number(data.moves)) ? Math.max(0, Math.floor(Number(data.moves))) : 0;
+
+  const legacy = data.version !== 1 || !data.items;
+  const flagNames = Object.keys(next.flags);
+  for (const name of flagNames) next.flags[name] = Boolean(data.flags[name]);
+
+  if (legacy) {
+    // Older saves did not store room contents, so infer collected objects from inventory.
+    for (const item of next.inv) {
+      const home = ITEM_HOME[item] || (item === "awakened ember" ? "kiln" : null);
+      if (home && item !== "awakened ember") {
+        next.items[home] = next.items[home].filter(value => value !== item);
+      }
+      if (item === "awakened ember") next.items.kiln = next.items.kiln.filter(value => value !== "sleeping ember");
+    }
+    next.flags.emberAwake = next.inv.includes("awakened ember") || next.flags.emberAwake;
+    // Older code could mark the ember as used before it was applied to the console.
+    next.flags.ember = false;
+    next.flags.console = false;
+  } else {
+    if (!data.items || typeof data.items !== "object") throw new Error("Invalid room inventory");
+    for (const roomName of Object.keys(ROOMS)) {
+      const contents = Array.isArray(data.items[roomName]) ? data.items[roomName] : [];
+      next.items[roomName] = contents.filter(item => ALL_ITEMS.includes(item) && ITEM_HOME[item] === roomName);
+    }
+    for (const item of next.inv) {
+      if (item === "awakened ember") next.flags.emberAwake = true;
+    }
+  }
+
+  next.flags.console = Boolean(next.flags.wired && next.flags.lens && next.flags.ember && !legacy);
+  if (legacy) next.flags.console = false;
+  const legacyEndingNote = legacy
+    ? next.notes.map(item => item.match(/^Ending chosen:\s*(mend|open|bind)$/i)).find(Boolean)
+    : null;
+  const restoredEnding = ENDINGS[data.ending] ? data.ending : (legacyEndingNote ? legacyEndingNote[1].toLowerCase() : null);
+  next.ended = Boolean(data.ended && restoredEnding);
+  next.ending = next.ended ? restoredEnding : null;
+  return next;
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) throw new Error("No save");
+    const data = JSON.parse(raw);
+    const migrated = data.version !== 1 || !data.items;
+    s = normalizeLoadedState(data);
+    render();
+    say(migrated
+      ? "Older Chapter Four save restored. Reapply the awakened ember at the underlake console if the engine descent is still sealed."
+      : "Chapter Four save restored.");
+  } catch (error) {
+    say("No readable Chapter Four save found in this browser.");
+  }
+}
+
+function restart() {
+  s = createState();
+  try { localStorage.removeItem(SAVE_KEY); } catch (error) { /* storage may be disabled */ }
+  render();
+  say("Chapter Four restarted. The previous Chapter Four save was cleared.");
+}
+
+function help() {
+  say("COMMANDS: LOOK, GO [direction], TAKE [item], USE [item], TALK, INVENTORY, READ, MAP, SAVE, LOAD, RESTART, HELP. " +
+      "Use the brass key on the Machine Chapel service door. In the Memory Kiln, USE GLASS LENS to read the smoke and USE SLEEPING EMBER to wake it. " +
+      "At the Underlake console, USE COPPER WIRE, then USE GLASS LENS, then USE AWAKENED EMBER. From the Root Engine go EAST. At the Split Chamber type CHOOSE MEND, CHOOSE OPEN, or CHOOSE BIND.");
+}
+
+function command(raw) {
+  const input = String(raw || "");
+  const c = input.toLowerCase().trim();
+  if (!c) return;
+
+  if (c === "help") { help(); return; }
+  if (c === "look") { render(); say($("story").textContent); return; }
+  if (c === "inventory" || c === "i") { say(s.inv.length ? s.inv.join(", ") : "Your inventory is empty."); return; }
+  if (c === "map") { say($("map").textContent); return; }
+  if (c === "save") { save(); return; }
+  if (c === "load") { load(); return; }
+  if (c === "restart") { restart(); return; }
+
+  if (s.ended) {
+    say("This chapter has ended. Type RESTART to begin again or LOAD to restore another save.");
+    return;
+  }
+
+  if (c.startsWith("go ")) {
+    const direction = c.slice(3).trim();
+    if (!direction) say("Go where? Try a direction shown in EXITS.");
+    else move(direction);
+    return;
+  }
+  if (["north", "south", "east", "west", "up", "down"].includes(c)) { move(c); return; }
+  if (c.startsWith("take ")) { take(c.slice(5)); return; }
+  if (c === "take") { take(""); return; }
+  if (c.startsWith("use ")) { useItem(c.slice(4)); return; }
+  if (c === "use") { useItem(""); return; }
+  if (c === "talk" || c.startsWith("talk ")) { talk(); return; }
+  if (c === "read") {
+    if (s.room === "stair") say("The maintenance hatch is sealed, but the stair itself remains open. The inscription reads: THE CITY ABOVE WAS A LID.");
+    else if (s.room === "underlake") say("The console inscription: LIGHT MUST REMEMBER ITS SOURCE.");
+    else if (s.room === "kiln" && s.flags.read) say("The smoke message: THE ROOT IS A CHOICE.");
+    else say("You find no readable inscription here.");
+    return;
+  }
+  if (c.startsWith("choose ")) {
+    if (s.room !== "split") { say("There is no choice to make here."); return; }
+    const choice = c.slice(7).trim();
+    if (Object.prototype.hasOwnProperty.call(ENDINGS, choice)) finish(choice);
+    else say("Choose MEND, OPEN, or BIND.");
+    return;
+  }
+  say("The Hollow does not understand. Type HELP for a list of commands.");
+}
+
+$("form").addEventListener("submit", event => {
+  event.preventDefault();
+  const value = $("cmd").value;
+  $("cmd").value = "";
+  command(value);
+});
+
+document.querySelectorAll("[data-cmd]").forEach(button => {
+  button.addEventListener("click", () => command(button.dataset.cmd));
+});
+$("load").addEventListener("click", load);
+
+render();
+say("The descent begins at the Root Stair. GO DOWN to the flooded gallery; search beneath the collapsed plinth for a brass key.");
+</script>
+</body>
+</html>

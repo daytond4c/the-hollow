@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE HOLLOW — Chapter Five: The Silence After</title>
+<style>
+:root{--bg:#050b08;--panel:#09140f;--green:#9dffb2;--dim:#5d9a6c;--line:#285b38;--gold:#e8d28a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#102519,#050b08 65%);color:var(--green);font:15px/1.6 "Courier New",monospace}
+main{max-width:960px;margin:auto;padding:22px 16px 48px}.head,.screen,.side{border:1px solid var(--line);background:#07110c;padding:17px}
+.head{text-align:center}.eyebrow{color:var(--dim);letter-spacing:.22em;font-size:.75rem}.head h1{font-size:clamp(1.5rem,5vw,2.6rem);letter-spacing:.1em;margin:6px}.head p{color:#b5d9bd;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 245px;gap:14px;margin-top:14px}.screen{min-height:420px}.scene{color:var(--gold);font-size:1.05rem;margin-bottom:12px}.story{white-space:pre-wrap;min-height:190px;color:#c0e4c8}.log{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px;color:var(--dim);font-size:.85rem;max-height:110px;overflow:auto}
+.entry{display:flex;gap:8px;margin-top:14px}.entry input{flex:1;min-width:0;background:#020704;color:var(--green);border:1px solid var(--line);padding:13px;font:inherit}.entry button,.quick button,#load{background:#102719;border:1px solid var(--dim);color:var(--green);padding:10px 13px;font:inherit;cursor:pointer}.quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.quick button{font-size:.76rem;padding:6px 9px}.side h3{font-size:.8rem;color:var(--dim);letter-spacing:.16em;margin:0 0 8px}.side section+section{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}.side ul{padding-left:18px;color:#b8d8bf;font-size:.85rem}.help{color:var(--gold);font-size:.82rem}.back{display:inline-block;color:var(--dim);margin-top:14px;font-size:.8rem}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;gap:14px}.side section+section{border:0;margin:0;padding:0}}@media(max-width:420px){.side{grid-template-columns:1fr}.entry{flex-wrap:wrap}.entry input,.entry button{width:100%}}
+</style>
+</head>
+<body><main>
+<header class="head"><div class="eyebrow">THE HOLLOW // ARCHIVE FIVE</div><h1>THE SILENCE AFTER</h1><p>The world has changed. Now it must decide what to remember.</p></header>
+<div class="layout">
+<section class="screen" aria-label="Adventure screen">
+<div class="scene" id="room">THE QUIET PLATFORM</div><div class="story" id="story" aria-live="polite"></div><div class="log" id="log" aria-live="polite">SYSTEM: Type HELP for commands.</div>
+<form class="entry" id="form"><input id="cmd" autocomplete="off" placeholder="What do you do?" aria-label="Adventure command"><button type="submit">ENTER</button></form>
+<div class="quick"><button type="button" data-cmd="look">LOOK</button><button type="button" data-cmd="map">MAP</button><button type="button" data-cmd="inventory">INVENTORY</button><button type="button" data-cmd="talk">TALK</button><button type="button" data-cmd="help">HELP</button><button type="button" data-cmd="save">SAVE</button><button type="button" data-cmd="restart">RESTART</button></div>
+</section>
+<aside class="side"><section><h3>INVENTORY</h3><ul id="inventory"><li>empty</li></ul></section><section><h3>FIELD NOTES</h3><ul id="notes"><li>The world is listening.</li></ul></section><section><h3>MAP</h3><div id="map" class="help">PLATFORM — GARDEN — OBSERVATORY — ARCHIVE</div></section><section><h3>ARCHIVE</h3><div class="help">Progress saves in this browser.</div><button id="load" type="button" style="margin-top:8px">LOAD SAVE</button></section></aside>
+</div><a class="back" href="index.html">← RETURN TO ARCHIVE TERMINAL</a></main>
+<script>
+"use strict";
+const KEY="theHollowChapter5";
+const ROOMS={
+ platform:{name:"THE QUIET PLATFORM",desc:"The old transit platform is still here, though the rails now end in grass. A paper bird rests on a bench. Beyond the archway, dawn touches a garden that was never on any map.",exits:{east:"garden"},items:["paper bird"]},
+ garden:{name:"THE UNROOTED GARDEN",desc:"Small green shoots grow through the cracked tiles. A child has left a tin music box beneath a tree. The air carries a tune you almost remember.",exits:{west:"platform",north:"observatory"},items:["music box"]},
+ observatory:{name:"THE EMPTY OBSERVATORY",desc:"The roof is gone. Three lenses point toward three different skies. A final lens, clouded with dust, lies beside a notebook.",exits:{south:"garden",east:"archive"},items:["clear lens"]},
+ archive:{name:"THE LAST ARCHIVE",desc:"Shelves hold blank books. At the center is a listening desk and a small brass plate: 'A choice is not the same as an ending.' The world waits for your account.",exits:{west:"observatory"},items:["blank book"]}
+};
+const ENDINGS={
+ mend:{title:"MEND — A WORLD THAT CAN HEAL",text:"The roots spread gently through the broken streets. People remember what hurt them, but the memories no longer own them. Mara's voice returns in fragments: not a command, not a warning, just a story told beside a warm window. The city begins again, imperfect and alive."},
+ open:{title:"OPEN — A WORLD WITHOUT LOCKS",text:"The sealed sky opens. All the discarded mornings arrive at once: strange, beautiful, and frightening. No single history can rule the others. The people must learn to live among possibilities, and the first thing they build is a place where every version can speak."},
+ bind:{title:"BIND — THE WATCH BELOW",text:"The engine's pulse steadies. Above, the city is safe, but its quiet has a cost. You hear the people begin to tell the truth about the world they inherited. Perhaps one day they will find a way to release you. For now, you keep the light."},
+ remember:{title:"REMEMBER — THE FOURTH POSSIBILITY",text:"You refuse the three answers the engine offered. You place the paper bird, the music box, and the clear lens beside the blank book. The archive fills not with one fixed history, but with the voices of everyone who lived through the fracture. The engine becomes a witness instead of a ruler. No one is asked to forget, and no one is forced to remain alone. The silence after is not empty. It is room for the next voice."}
+};
+function fresh(){return {room:"platform",inv:[],items:{platform:["paper bird"],garden:["music box"],observatory:["clear lens"],archive:["blank book"]},notes:["The world survived. Its future is not settled."],flags:{heard:false,insight:false},ending:null,ended:false};}
+let s=fresh();const $=id=>document.getElementById(id);
+function say(t){$("log").innerHTML=String(t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))+"<br>"+$("log").innerHTML;}
+function note(t){if(!s.notes.includes(t))s.notes.push(t);}
+function render(){
+ const r=ROOMS[s.room];$("room").textContent=r.name;
+ if(s.ended){$("story").textContent=ENDINGS[s.ending].title+"\n\n"+ENDINGS[s.ending].text+"\n\nTHE END — THE HOLLOW";} 
+ else {$("story").textContent=r.desc+"\n\nEXITS: "+Object.keys(r.exits).map(x=>x.toUpperCase()).join(", ")+"\nHERE: "+(s.items[s.room].join(", ")||"nothing visible")+(s.room==="archive"?"\nThe blank book waits. Type CHOOSE MEND, OPEN, BIND, or REMEMBER.":"");}
+ $("inventory").innerHTML=s.inv.length?s.inv.map(x=>"<li>"+x+"</li>").join(""):"<li>empty</li>";
+ $("notes").innerHTML=s.notes.map(x=>"<li>"+x+"</li>").join("");
+ $("map").textContent="QUIET PLATFORM — UNROOTED GARDEN — EMPTY OBSERVATORY — LAST ARCHIVE";
+}
+function take(q){let i=s.items[s.room].findIndex(x=>x.includes(q));if(i<0){say("You don't see that here.");return;}let x=s.items[s.room].splice(i,1)[0];s.inv.push(x);say("Taken: "+x+".");render();}
+function talk(){
+ if(s.room==="platform"){say("A voice in the station speaker says: 'The ending was only the engine's answer. The world is still here.'");note("The engine's answer was not the world's only future.");}
+ else if(s.room==="garden"){say("You hear children arguing over the tune in the music box. One says it belongs to everyone.");s.flags.heard=true;note("A shared memory is not the same as a controlled memory.");}
+ else if(s.room==="observatory"){say("The notebook reads: 'Three paths were offered because three paths were easy to name. Look through a clear lens. Listen before choosing.'");s.flags.insight=true;note("There may be another answer beyond MEND, OPEN, and BIND.");}
+ else {say("The listening desk answers with a soft click. It is ready to hear what you choose to preserve.");}
+}
+function choose(c){
+ if(s.room!=="archive"){say("The final choice can only be made at the Last Archive.");return;}
+ if(!["mend","open","bind","remember"].includes(c)){say("Choose MEND, OPEN, BIND, or REMEMBER.");return;}
+ if(c==="remember"&&!(s.flags.heard&&s.flags.insight&&["paper bird","music box","clear lens","blank book"].every(x=>s.inv.includes(x)))){say("The fourth possibility is not clear yet. Explore, listen in the garden, read the observatory notebook, and bring the four keepsakes to the archive.");return;}
+ s.ending=c;s.ended=true;note("Epilogue chosen: "+c.toUpperCase());render();say("The archive records your answer.");save();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({version:1,...s}));say("Progress saved in this browser.");}catch(e){say("SAVE FAILED: browser storage is unavailable.");}}
+function load(){try{let d=JSON.parse(localStorage.getItem(KEY));if(!d||!ROOMS[d.room]||!Array.isArray(d.inv))throw 0;s={...fresh(),...d,flags:{...fresh().flags,...d.flags},items:{...fresh().items,...d.items}};if(s.ended&&!ENDINGS[s.ending])s.ended=false;render();say("Chapter Five save restored.");}catch(e){say("No readable Chapter Five save found.");}}
+function restart(){s=fresh();try{localStorage.removeItem(KEY)}catch(e){}render();say("Chapter Five restarted. Previous Chapter Five save cleared.");}
+function help(){say("COMMANDS: LOOK, GO [direction], TAKE [item], TALK, INVENTORY, MAP, CHOOSE [MEND/OPEN/BIND/REMEMBER], SAVE, LOAD, RESTART, HELP. The fourth ending requires listening in the garden, discovering the observatory note, and carrying all four keepsakes to the Last Archive.");}
+function command(raw){let c=String(raw||"").toLowerCase().trim();if(!c)return;
+ if(c==="help"){help();return}if(c==="look"){render();say($("story").textContent);return}if(c==="map"){say($("map").textContent);return}if(c==="inventory"||c==="i"){say(s.inv.join(", ")||"Your inventory is empty.");return}if(c==="save"){save();return}if(c==="load"){load();return}if(c==="restart"){restart();return}
+ if(s.ended){say("This epilogue has ended. Type RESTART to replay or LOAD to restore a save.");return}
+ if(c==="talk"){talk();return}if(c.startsWith("take ")){take(c.slice(5));return}
+ if(c.startsWith("choose ")){choose(c.slice(7));return}
+ let d=c.startsWith("go ")?c.slice(3):c;if(ROOMS[s.room].exits[d]){s.room=ROOMS[s.room].exits[d];render();say("You move "+d+".");return}
+ say("The Hollow does not understand. Type HELP for commands.");
+}
+$("form").addEventListener("submit",e=>{e.preventDefault();let v=$("cmd").value;$("cmd").value="";command(v);});
+document.querySelectorAll("[data-cmd]").forEach(b=>b.addEventListener("click",()=>command(b.dataset.cmd)));
+$("load").addEventListener("click",load);render();
+</script></body></html>

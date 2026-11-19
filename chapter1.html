@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THE HOLLOW — Chapter One</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+:root{--g:#a9ff9d;--d:#659d6c;--bg:#050a07;--line:#285c34}
+*{box-sizing:border-box}body{margin:0;padding:22px 12px;background:radial-gradient(ellipse at 50% 0,#14251a,#030604 68%);color:var(--g);font-family:'Share Tech Mono',monospace}
+.app{max-width:1000px;margin:auto;border:1px solid #397d48;border-radius:10px;overflow:hidden;background:#050a07;box-shadow:0 0 55px #39ff5a18}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:11px 17px;background:#0c180f;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:2px;color:#83bd89}
+header{padding:20px 22px 15px;border-bottom:1px solid #183b22}h1{margin:0;font-size:clamp(27px,5vw,43px);letter-spacing:7px;text-shadow:0 0 18px #63ff76}.sub{font-size:11px;letter-spacing:3px;color:#659d6c;margin-top:7px}
+main{padding:18px 22px 22px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 225px;gap:13px}.story{height:min(55vh,520px);min-height:330px;overflow:auto;background:#07100a;border:1px solid #1e4c2a;padding:17px;line-height:1.65;font-size:14px;white-space:pre-wrap}.story p{margin:0 0 12px}.room{color:#d1ffd0;text-shadow:0 0 8px #4aff6b44}.system{color:#7ebc86}.warn{color:#ffd17e}.danger{color:#ff9292}
+.side{display:flex;flex-direction:column;gap:10px}.box{background:#07100a;border:1px solid #1e4c2a;padding:12px}.label{font-size:10px;letter-spacing:2px;color:#659c6d;margin-bottom:8px}.value{font-size:12px;line-height:1.6;color:#c8f5c4;overflow-wrap:anywhere}.map{font-size:11px;line-height:1.7;color:#91c899;white-space:pre-wrap}
+.entry{display:flex;align-items:center;gap:10px;margin-top:13px;border-bottom:1px solid #397d48;padding:9px 0}.prompt{font-size:20px;color:#d5ffd0}input{background:transparent;border:0;outline:0;color:#e1ffe0;font:15px 'Share Tech Mono';width:100%;caret-color:var(--g)}
+.controls{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}button{font:11px 'Share Tech Mono';letter-spacing:1px;color:#c4ffc1;background:#0b1b10;border:1px solid #347c43;padding:9px 11px;border-radius:4px;cursor:pointer}button:hover{background:#17351e;box-shadow:0 0 12px #4aff6b33}
+.help{color:#659d6c;font-size:11px;line-height:1.6;margin-top:12px}footer{padding:11px 20px;border-top:1px solid #183b22;color:#527d59;font-size:10px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.story{height:48vh;min-height:290px}main{padding:13px}}@media(max-width:420px){.side{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="app">
+<div class="top"><span>HOLLOW SYSTEMS // INTERACTIVE FICTION</span><span id="session">CHAPTER 01 · NEW SESSION</span></div>
+<header><h1>THE HOLLOW</h1><div class="sub">CHAPTER ONE: THE PLACE BETWEEN · A TEXT ADVENTURE</div></header>
+<main>
+<div class="layout">
+ <div>
+  <div class="story" id="story" aria-live="polite"></div>
+  <div class="entry"><span class="prompt">&gt;</span><input id="command" autocomplete="off" spellcheck="false" placeholder="What do you do? Try HELP."></div>
+  <div class="controls">
+   <button data-cmd="LOOK">LOOK</button><button data-cmd="INVENTORY">INVENTORY</button><button data-cmd="MAP">MAP</button><button data-cmd="HELP">HELP</button>
+   <button id="save">SAVE</button><button id="load">LOAD</button><button id="restart">NEW GAME</button>
+  </div>
+  <div class="help">TIP: Try EXAMINE [OBJECT], TALK TO [PERSON], or USE [ITEM] ON [OBJECT]. The game understands several natural command variations.</div>
+ </div>
+ <aside class="side">
+  <div class="box"><div class="label">LOCATION</div><div class="value" id="loc">—</div></div>
+  <div class="box"><div class="label">INVENTORY</div><div class="value" id="inv">Empty</div></div>
+  <div class="box"><div class="label">FIELD NOTES</div><div class="value" id="notes">No notes yet.</div></div>
+  <div class="box"><div class="label">AREA MAP</div><div class="map" id="map">Unknown</div></div>
+ </aside>
+</div>
+</main><footer><span>OFFLINE-FRIENDLY · NO ACCOUNT · NO PURCHASES</span><span>PROGRESS SAVES IN THIS BROWSER</span></footer>
+</div>
+<script>
+const $=x=>document.getElementById(x), out=$('story');
+const rooms={
+cell:{name:'Wake Cell',desc:'A concrete cell. A bare bulb swings overhead, though there is no draft. A steel door waits to the north. An old ventilation grate is set into the east wall. Scratched into the paint: THE LIGHT REMEMBERS.',exits:{north:'hall'},items:['brass key'],look:{grate:'Two screws hold the grate in place. One has a narrow slot, almost like a tiny keyhole.',scratches:'The message is deep and deliberate. Beneath it, almost invisible: 1984.'}},
+hall:{name:'The Long Corridor',desc:'Emergency strips pulse red along the floor. The cell is south. A stairwell descends west. A security door stands east, with a key slot. A dark service panel is set beside it.',exits:{south:'cell',west:'stairs',east:'watch'},items:['wire'],look:{panel:'A small panel has two exposed contacts. It might be possible to bridge them with a wire.'}},
+stairs:{name:'Flooded Stairwell',desc:'Water covers the lowest steps. A dented locker is bolted to the wall. The corridor is east; a heavy door marked PUMP ROOM is below.',exits:{east:'hall',down:'pump'},items:['metal token'],look:{locker:'A circular slot is set into the locker. The token-shaped outline around it is polished from use.'}},
+pump:{name:'Pump Room',desc:'A huge pump shudders in the dark. Its control box is missing a fuse. The stairwell is up. A maintenance hatch is set into the south wall.',exits:{up:'stairs'},items:['fuse'],look:{control:'One fuse socket is empty. A label reads: AUXILIARY POWER.',hatch:'A round token-shaped recess sits beside the hatch handle.'}},
+watch:{name:'Observation Room',desc:'Dusty monitors line the walls. One screen shows this room from a few seconds in the future. The corridor is west. A sealed archive door is north.',exits:{west:'hall',north:'archive'},items:['photograph'],look:{monitor:'The screen flickers. In its delayed image, you see yourself holding a photograph.',photo:'A faded staff portrait. The person in it looks exactly like you. The badge reads: WARDEN.'}},
+archive:{name:'The Silent Archive',desc:'Rows of cabinets stand beneath a low ceiling. A terminal glows on a desk. A narrow passage is hidden behind a sliding shelf to the east. The observation room is south.',exits:{south:'watch',east:'library'},items:['journal'],look:{terminal:'A single line glows: THE EXIT IS NOT THE WAY OUT. A blinking cursor waits.',shelf:'A carved sun symbol sits at shoulder height.'}},
+library:{name:'The Memory Library',desc:'Thousands of small glass cylinders fill the shelves. A speaking tube descends from the ceiling. The archive is west. A spiral stair descends north.',exits:{west:'archive',north:'gallery'},items:['glass cylinder'],look:{tube:'A voice whispers through the tube: “The bell rings only for the living.”',cylinders:'Each cylinder contains a memory. One bears your name.'}},
+gallery:{name:'The Portrait Gallery',desc:'Portraits watch from dark frames. At the far end hangs a bell with no clapper. The library is south. A narrow door leads east.',exits:{south:'library',east:'chapel'},items:['silver bell clapper'],look:{bell:'The bell is silent. Its clapper is missing.',portraits:'Every portrait is of you, at different ages. The newest one is still wet.'}},
+chapel:{name:'The Quiet Chapel',desc:'A small stone chapel with a dry reflecting pool. A stone altar bears a circular indentation. The gallery is west. A low tunnel leads down.',exits:{west:'gallery',down:'cistern'},items:['chalk'],look:{altar:'A phrase is carved into the stone: SPEAK THE NAME YOU WERE GIVEN.',pool:'Your reflection is smiling. You are not.'}},
+cistern:{name:'The Black Cistern',desc:'A circular chamber filled with ankle-deep black water. A sealed iron door stands north. The chapel is up. Something metallic glints beneath the water.',exits:{up:'chapel'},items:['iron seal'],look:{door:'Three symbols are engraved above the door: SUN, EYE, DOOR.',water:'You can just make out a metal shape beneath the surface.'}},
+sanctum:{name:'The Heart of the Hollow',desc:'A vast chamber surrounds a black glass monolith. There is no visible ceiling. A low hum vibrates in your teeth. The cistern lies south. An elevator waits to the north.',exits:{south:'cistern',north:'lift'},items:[],look:{monolith:'Your reflection moves a heartbeat after you. Words form on the glass: REMEMBER THE FIRST LIGHT.',elevator:'The elevator panel has a single empty slot.'}},
+lift:{name:'The Lift',desc:'The elevator rises without moving. A seam of white light opens in the doors. A final console waits, its screen showing a single question: WHO LEFT YOU HERE?',exits:{south:'sanctum'},items:[],look:{console:'Three answers are available: THE WARDEN, THE MACHINE, or YOU.'}}
+};
+let room='cell',inv=[],flags={},moves=0,notes=[];
+const aliases={'key':'brass key','brass key':'brass key','token':'metal token','metal token':'metal token','clapper':'silver bell clapper','bell clapper':'silver bell clapper','cylinder':'glass cylinder','seal':'iron seal'};
+function say(t,cls=''){let p=document.createElement('p');p.textContent=t;if(cls)p.className=cls;out.appendChild(p);out.scrollTop=out.scrollHeight}
+function itemName(s){s=s.trim().replace(/^(the|a|an)\s+/,'');return aliases[s]||s}
+function has(s){return inv.includes(itemName(s))}
+function visibleItems(){return rooms[room].items.filter(x=>!flags['taken:'+room+':'+x])}
+function describe(){let r=rooms[room];say(r.name.toUpperCase(),'room');say(r.desc);let it=visibleItems();if(it.length)say('You can see: '+it.join(', ')+'.','system');say('Obvious exits: '+Object.keys(r.exits).join(', ').toUpperCase()+'.','system');render()}
+function render(){$('loc').textContent=rooms[room].name;$('inv').textContent=inv.length?inv.join(', '):'Empty';$('notes').textContent=notes.length?notes.slice(-4).join(' · '):'No notes yet.';$('session').textContent='CHAPTER 01 · MOVES '+moves+(flags.ending?' · ENDING':'');$('map').textContent='CELL — HALL — WATCH — ARCHIVE\n       |       |         |\n     STAIRS  [ ]      LIBRARY\n       |                 |\n     PUMP              GALLERY\n                         |\n                       CHAPEL\n                         |\n                      CISTERN\n                         |\n                      SANCTUM\n                         |\n                        LIFT';}
+function move(dir){let exits=rooms[room].exits;if(!exits[dir]){say('You cannot go that way.','warn');return}
+let target=exits[dir];
+if(target==='watch'&&!flags.watchOpen){say('The security door is locked. The brass key might fit.','warn');return}
+if(target==='archive'&&!flags.archiveOpen){say('The archive lock is dark and unresponsive. The service panel in the corridor may be relevant.','warn');return}
+if(target==='library'&&!flags.shelfOpen){say('The sliding shelf is stuck. A release mechanism is hidden somewhere nearby.','warn');return}
+if(target==='gallery'&&!flags.libraryPass){say('The spiral stair is blocked by a glass door. A cylinder-shaped reader glows beside it.','warn');return}
+if(target==='chapel'&&!flags.bellRung){say('The door is sealed. A message appears: LET THE BELL REMEMBER.','warn');return}
+if(target==='cistern'&&!flags.chapelSolved){say('The tunnel is sealed by a stone mechanism.','warn');return}
+if(target==='sanctum'&&!flags.cisternOpen){say('The iron door is shut. Three symbols wait above its lock.','warn');return}
+if(target==='lift'&&!flags.coreAwake){say('The elevator is dead. The monolith may be connected to its power.','warn');return}
+room=target;say('You go '+dir+'.','system');describe()}
+function examine(t){let r=rooms[room];if(!t||t==='room'){describe();return}
+let k=Object.keys(r.look).find(x=>t.includes(x)||x.includes(t));if(k){say(r.look[k]);return}
+if(t.includes('door')&&room==='hall')say('A steel security door with a brass key slot.','system');
+else if(t.includes('key')&&has('brass key'))say('A small brass key, cold to the touch.');
+else if(t.includes('journal')&&has('journal'))say('The last page: “The first light was not the sun. It was the first memory. The Warden must remember.”');
+else if(t.includes('cylinder')&&has('glass cylinder'))say('The glass cylinder is etched with a name: ELIAS. It hums faintly.');
+else if(t.includes('altar')&&room==='chapel')say(r.look.altar);
+else say('You examine it carefully. Nothing else becomes clear.')}
+function useCommand(text){
+let m=text.match(/^(.+?)\s+(?:on|with|in|into|to)\s+(.+)$/);let a=itemName(m?m[1]:text),b=(m?m[2]:'').replace(/^(the|a|an)\s+/,'');
+if(room==='cell'&&a==='brass key'&&b.includes('grate')&&has(a)){flags.grateOpen=true;say('The key fits the grate screw. You loosen it and pull the grate free. A coil of wire drops into your hand.');if(!has('wire'))inv.push('wire');return}
+if(room==='hall'&&a==='wire'&&(b.includes('panel')||b.includes('contact'))&&has(a)){flags.archiveOpen=true;say('You bridge the contacts. The panel flashes 1984, then the archive lock clicks open.','room');return}
+if(room==='hall'&&a==='brass key'&&b.includes('door')&&has(a)){flags.watchOpen=true;say('The brass key turns. The security door unlocks.','room');return}
+if(room==='stairs'&&a==='metal token'&&b.includes('locker')&&has(a)){flags.lockerOpen=true;say('The token releases the locker. Inside is a fuse.');if(!has('fuse'))inv.push('fuse');return}
+if(room==='pump'&&a==='fuse'&&(b.includes('control')||b.includes('socket')||b.includes('pump'))&&has(a)){flags.pumpOn=true;say('The fuse snaps into place. The pump roars awake, draining the stairwell and powering the old circuits.');return}
+if(room==='pump'&&a==='metal token'&&b.includes('hatch')&&has(a)){flags.hatchOpen=true;say('The token turns in the hatch recess. The hatch opens onto a narrow service crawlway—but it loops back to the stairs.','system');return}
+if(room==='watch'&&a==='photograph'&&b.includes('reader')&&has(a)){flags.identity=true;say('The reader scans the portrait. IDENTITY CONFIRMED: WARDEN. The archive lock releases.','room');return}
+if(room==='archive'&&a==='journal'&&has(a)){flags.shelfOpen=true;say('The journal contains a pressed note: “Find the sun. Press where the first memory rests.” You notice the carved sun symbol on the shelf release. The shelf slides aside.');return}
+if(room==='library'&&a==='glass cylinder'&&(b.includes('reader')||b.includes('door'))&&has(a)){flags.libraryPass=true;say('The cylinder fits the reader. A memory plays: a child says, “Elias, wake up.” The glass door unlocks.');return}
+if(room==='gallery'&&a==='silver bell clapper'&&b.includes('bell')&&has(a)){flags.bellRung=true;say('You fit the clapper into the bell and strike it. Its sound rolls through the walls. Somewhere, a lock opens.','room');return}
+if(room==='chapel'&&a==='chalk'&&b.includes('altar')&&has(a)){flags.chapelSolved=true;say('You trace the sun symbol on the altar. The stone shifts, revealing a passage downward.');return}
+if(room==='cistern'&&a==='iron seal'&&b.includes('door')&&has(a)){flags.cisternOpen=true;say('The iron seal fits the door. The three symbols flare: SUN, EYE, DOOR. The lock opens.');return}
+if(room==='sanctum'&&a==='glass cylinder'&&b.includes('monolith')&&has(a)){flags.coreAwake=true;say('The cylinder touches the glass. A memory floods the chamber: you built this place to preserve someone you could not bear to lose. The elevator wakes.','room');return}
+say('That does not seem to work here. Try examining the object, or use a different combination.','warn')
+}
+function take(t){let it=itemName(t);let found=visibleItems().find(x=>x===it||x.includes(it)||it.includes(x));if(!found){say('You do not see that here.','warn');return}inv.push(found);flags['taken:'+room+':'+found]=true;say('Taken: '+found+'.','system')}
+function execute(raw){let s=raw.trim().toLowerCase().replace(/[.!?]/g,'');if(!s)return;moves++;say('> '+raw);let parts=s.split(/\s+/),v=parts[0],arg=parts.slice(1).join(' ');
+if(['help','?'].includes(v)){say('TRY: LOOK, EXAMINE GRATE, TAKE KEY, GO NORTH, NORTH, USE KEY ON GRATE, TALK TO [PERSON], READ JOURNAL, INVENTORY, MAP, SAVE, LOAD. You can use short directions: N, S, E, W, U, D.','system')}
+else if(['look','l'].includes(v))describe();
+else if(['inventory','inv','i'].includes(v))say(inv.length?'You carry: '+inv.join(', '):'Your pockets are empty.','system');
+else if(v==='map')say($('map').textContent,'system');
+else if(['north','south','east','west','up','down','n','s','e','w','u','d','go','walk','move'].includes(v)){let d=({n:'north',s:'south',e:'east',w:'west',u:'up',d:'down'})[v]||(['go','walk','move'].includes(v)?arg:v);move(d)}
+else if(['take','get','grab','pick'].includes(v))take(arg.replace(/^up /,''));
+else if(['examine','inspect','x','lookat'].includes(v))examine(arg);
+else if(v==='open'){if(room==='watch'&&arg.includes('door')&&has('brass key')){flags.watchOpen=true;say('The security door unlocks.','room')}else if(room==='cell'&&arg.includes('grate')&&flags.grateOpen)say('The grate is already open.');else say('It will not open. Maybe an item can help.','warn')}
+else if(v==='use')useCommand(arg);
+else if(v==='read'){if(arg.includes('journal')&&has('journal')){say('“The first light was not the sun. It was the first memory. The Warden must remember.”');notes.push('Journal: first light = first memory')}else if(arg.includes('terminal')&&room==='archive')examine('terminal');else say('You cannot read that right now.','warn')}
+else if(v==='talk'){if(room==='library')say('The speaking tube whispers: “Elias is not the name you remember. It is the name you buried.”','warn');else say('There is nobody here to talk to.','system')}
+else if(v==='save')saveGame();
+else if(v==='load')loadGame();
+else if(v==='restart')newGame();
+else if(room==='lift'&&(['the warden','warden','the machine','machine','you'].includes(s))){if(s.includes('you')){flags.ending=true;say('You answer: YOU. The terminal goes dark. The doors open onto a morning sky—and a familiar voice calls your name. ENDING: THE REMEMBERING.','room')}else say('The answer is rejected. A faint pulse travels through the console. Think about the memories you found.','warn')}
+else say('The Hollow does not understand. Type HELP for commands.','warn');
+render()}
+function saveGame(){localStorage.setItem('hollowChapter1',JSON.stringify({room,inv,flags,moves,notes}));say('GAME SAVED IN THIS BROWSER.','system')}
+function loadGame(){let raw=localStorage.getItem('hollowChapter1');if(!raw){say('No save file found.','warn');return}try{let d=JSON.parse(raw);room=d.room;inv=d.inv;flags=d.flags;moves=d.moves;notes=d.notes||[];say('SAVE RESTORED.','system');describe()}catch(e){say('Save file could not be read.','danger')}}
+function newGame(){room='cell';inv=[];flags={};moves=0;notes=[];out.innerHTML='';say('A LOW HUM. A SHARP BREATH. YOUR EYES OPEN.');say('A voice crackles from somewhere behind the walls: “Warden? Can you hear me?”','warn');describe()}
+$('command').addEventListener('keydown',e=>{if(e.key==='Enter'){let v=e.target.value;e.target.value='';execute(v)}});
+document.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>execute(b.dataset.cmd));
+$('save').onclick=saveGame;$('load').onclick=loadGame;$('restart').onclick=()=>{if(confirm('Start a new game? Current unsaved progress will be lost.'))newGame()};
+newGame();
+</script></body></html>
