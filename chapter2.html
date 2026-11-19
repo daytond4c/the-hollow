@@ -88,7 +88,7 @@ if(room==='underworks'&&t.includes('robot')){say(flags.robotFixed?'The robot say
 if(room==='observatory'){say('The astronomer says: “The stars are not above us. They are memories we have not looked at yet.”');notes.push('Astronomer: stars are unremembered memories');return}
 say('No one answers.','system')}
 function give(t){let m=t.match(/^(.+?)\s+to\s+(.+)$/);if(!m){say('Try GIVE [ITEM] TO [PERSON].','warn');return}let a=norm(m[1]),who=m[2];if(!has(a)){say('You are not carrying that.','warn');return}
-if(room==='square'&&who.includes('mara')&&a==='file 1984'){inv=inv.filter(x=>x!==a);flags.maraProof=true;say('Mara studies the file. “So I did not imagine him.” She gives you a signal key.');if(!has('signal key'))inv.push('signal key');notes.push('Mara confirmed Elias was real');return}
+if(room==='square'&&who.includes('mara')&&a==='file 1984'){flags.maraProof=true;say('Mara studies the file. “So I did not imagine him.” She gives you a signal key.');if(!has('signal key'))inv.push('signal key');notes.push('Mara confirmed Elias was real');return}
 say('They do not seem to want that.','warn')}
 function execute(raw){let s=raw.trim().toLowerCase().replace(/[.!?]/g,'');if(!s)return;moves++;say('> '+raw);let p=s.split(/\s+/),v=p[0],a=p.slice(1).join(' ');
 if(['help','?'].includes(v))say('LOOK · EXAMINE [THING] · TAKE [ITEM] · GO [DIRECTION] · NORTH/SOUTH/EAST/WEST/UP/DOWN · INVENTORY · MAP · TALK TO MARA · GIVE [ITEM] TO [PERSON] · USE [ITEM] ON [OBJECT] · READ [THING] · SAVE · LOAD.','system');
